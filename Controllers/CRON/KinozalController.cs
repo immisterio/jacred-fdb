@@ -263,7 +263,7 @@ namespace JacRed.Controllers.CRON
 
                 if (row.Contains("<td class='s'>сегодня"))
                 {
-                    createTime = DateTime.Today;
+                    createTime = DateTime.UtcNow;
                 }
                 else if (row.Contains("<td class='s'>вчера"))
                 {

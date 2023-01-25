@@ -169,7 +169,7 @@ namespace JacRed.Controllers.CRON
                         if (page != 1)
                             continue;
 
-                        createTime = DateTime.Now;
+                        createTime = DateTime.UtcNow;
                     }
                     #endregion
 

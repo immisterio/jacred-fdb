@@ -19,7 +19,7 @@ namespace JacRed.Models.Details
 
         public string sizeName { get; set; }
 
-        public DateTime createTime { get; set; } = DateTime.Now;
+        public DateTime createTime { get; set; } = DateTime.UtcNow;
 
         public DateTime updateTime { get; set; } = DateTime.UtcNow;
 

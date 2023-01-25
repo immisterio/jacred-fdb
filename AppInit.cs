@@ -53,9 +53,9 @@ namespace JacRed
 
         public bool evercache = false;
 
-        public int timeStatsUpdate = 20; // минуты
+        public int timeStatsUpdate = 20; // минут
 
-        public int timeSync = 20; // минуты
+        public int timeSync = 10; // минут
 
 
         public TrackerSettings Rutor = new TrackerSettings("http://rutor.info");

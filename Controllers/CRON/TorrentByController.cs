@@ -157,7 +157,7 @@ namespace JacRed.Controllers.CRON
 
                 if (row.Contains(">Сегодня</td>"))
                 {
-                    createTime = DateTime.Today;
+                    createTime = DateTime.UtcNow;
                 }
                 else if (row.Contains(">Вчера</td>"))
                 {

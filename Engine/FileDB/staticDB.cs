@@ -140,8 +140,8 @@ namespace JacRed.Engine
                 if (!File.Exists($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz"))
                     File.Copy("Data/masterDb.bz", $"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz");
 
-                if (File.Exists($"Data/masterDb_{DateTime.Today.AddDays(-2):dd-MM-yyyy}.bz"))
-                    File.Delete($"Data/masterDb_{DateTime.Today.AddDays(-2):dd-MM-yyyy}.bz");
+                if (File.Exists($"Data/masterDb_{DateTime.Today.AddDays(-3):dd-MM-yyyy}.bz"))
+                    File.Delete($"Data/masterDb_{DateTime.Today.AddDays(-3):dd-MM-yyyy}.bz");
             }
             catch { }
         }

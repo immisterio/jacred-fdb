@@ -142,6 +142,7 @@ namespace JacRed.Engine
                     magnet = torrent.magnet
                 };
 
+                updateTime = default;
                 updateFullDetails(t);
                 db.TryAdd(t.url, t);
                 AddOrUpdateMasterDb(t);

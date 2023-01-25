@@ -37,7 +37,7 @@ namespace JacRed.Controllers
         public ActionResult Jackett(string query, string title, string title_original, int year, int is_serial, Dictionary<string, string> category)
         {
             bool rqnum = false, setcache = false;
-            var torrents = new List<TorrentDetails>();
+            var torrents = new Dictionary<string, TorrentDetails>();
 
             #region Запрос с NUM
             var mNum = Regex.Match(query ?? string.Empty, "^([^a-z-A-Z]+) ([^а-я-А-Я]+) ([0-9]{4})$");
@@ -80,6 +80,21 @@ namespace JacRed.Controllers
             }
             #endregion
 
+            #region AddTorrents
+            void AddTorrents(TorrentDetails t)
+            {
+                if (torrents.TryGetValue(t.url, out TorrentDetails val))
+                {
+                    if (t.updateTime > val.updateTime)
+                        torrents[t.url] = t;
+                }
+                else
+                {
+                    torrents.TryAdd(t.url, t);
+                }
+            }
+            #endregion
+
             string memoryKey = $"{AppInit.conf.mergeduplicates}:{rqnum}:{title}:{title_original}:{year}:{is_serial}";
             if (memoryCache.TryGetValue(memoryKey, out string jval))
                 return Content(jval, "application/json; charset=utf-8");
@@ -114,11 +129,11 @@ namespace JacRed.Controllers
                                     if (year > 0)
                                     {
                                         if (t.relased == year || t.relased == (year - 1) || t.relased == (year + 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                     else
                                     {
-                                        torrents.Add(t);
+                                        AddTorrents(t);
                                     }
                                 }
                                 #endregion
@@ -131,11 +146,11 @@ namespace JacRed.Controllers
                                     if (year > 0)
                                     {
                                         if (t.relased >= (year - 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                     else
                                     {
-                                        torrents.Add(t);
+                                        AddTorrents(t);
                                     }
                                 }
                                 #endregion
@@ -148,11 +163,11 @@ namespace JacRed.Controllers
                                     if (year > 0)
                                     {
                                         if (t.relased >= (year - 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                     else
                                     {
-                                        torrents.Add(t);
+                                        AddTorrents(t);
                                     }
                                 }
                                 #endregion
@@ -165,11 +180,11 @@ namespace JacRed.Controllers
                                     if (year > 0)
                                     {
                                         if (t.relased >= (year - 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                     else
                                     {
-                                        torrents.Add(t);
+                                        AddTorrents(t);
                                     }
                                 }
                                 #endregion
@@ -182,11 +197,11 @@ namespace JacRed.Controllers
                                     if (year > 0)
                                     {
                                         if (t.relased >= (year - 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                     else
                                     {
-                                        torrents.Add(t);
+                                        AddTorrents(t);
                                     }
                                 }
                                 #endregion
@@ -199,17 +214,17 @@ namespace JacRed.Controllers
                                     if (t.types.Contains("movie") || t.types.Contains("multfilm") || t.types.Contains("documovie"))
                                     {
                                         if (t.relased == year || t.relased == (year - 1) || t.relased == (year + 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                     else
                                     {
                                         if (t.relased >= (year - 1))
-                                            torrents.Add(t);
+                                            AddTorrents(t);
                                     }
                                 }
                                 else
                                 {
-                                    torrents.Add(t);
+                                    AddTorrents(t);
                                 }
                                 #endregion
                             }
@@ -243,31 +258,31 @@ namespace JacRed.Controllers
                             if (is_serial == 1)
                             {
                                 if (t.types.Contains("movie") || t.types.Contains("multfilm") || t.types.Contains("anime") || t.types.Contains("documovie"))
-                                    torrents.Add(t);
+                                    AddTorrents(t);
                             }
                             else if (is_serial == 2)
                             {
                                 if (t.types.Contains("serial") || t.types.Contains("multserial") || t.types.Contains("anime") || t.types.Contains("docuserial") || t.types.Contains("tvshow"))
-                                    torrents.Add(t);
+                                    AddTorrents(t);
                             }
                             else if (is_serial == 3)
                             {
                                 if (t.types.Contains("tvshow"))
-                                    torrents.Add(t);
+                                    AddTorrents(t);
                             }
                             else if (is_serial == 4)
                             {
                                 if (t.types.Contains("docuserial") || t.types.Contains("documovie"))
-                                    torrents.Add(t);
+                                    AddTorrents(t);
                             }
                             else if (is_serial == 5)
                             {
                                 if (t.types.Contains("anime"))
-                                    torrents.Add(t);
+                                    AddTorrents(t);
                             }
                             else
                             {
-                                torrents.Add(t);
+                                AddTorrents(t);
                             }
                         }
 
@@ -329,13 +344,13 @@ namespace JacRed.Controllers
 
             if (!AppInit.conf.mergeduplicates || rqnum)
             {
-                tsort = torrents;
+                tsort = torrents.Values.ToList();
             }
             else 
             {
                 Dictionary<string, (TorrentDetails torrent, string title, string Name, List<string> AnnounceUrls)> temp = new Dictionary<string, (TorrentDetails, string, string, List<string>)>();
 
-                foreach (var torrent in torrents)
+                foreach (var torrent in torrents.Values.ToList())
                 {
                     var magnetLink = MagnetLink.Parse(torrent.magnet);
                     string hex = magnetLink.InfoHash.ToHex();
@@ -489,8 +504,22 @@ namespace JacRed.Controllers
             #endregion
 
             #region Выборка 
-            IEnumerable<TorrentDetails> query = null;
-            var torrents = new List<TorrentDetails>();
+            var torrents = new Dictionary<string, TorrentDetails>();
+
+            #region AddTorrents
+            void AddTorrents(TorrentDetails t)
+            {
+                if (torrents.TryGetValue(t.url, out TorrentDetails val))
+                {
+                    if (t.updateTime > val.updateTime)
+                        torrents[t.url] = t;
+                }
+                else
+                {
+                    torrents.TryAdd(t.url, t);
+                }
+            }
+            #endregion
 
             if (string.IsNullOrWhiteSpace(search) || 3 >= search.Length)
                 return Json(torrents);
@@ -501,9 +530,9 @@ namespace JacRed.Controllers
             if (exact)
             {
                 #region Точный поиск
-                foreach (var val in FileDB.masterDb.Where(i => i.Key.StartsWith($"{_s}:") || i.Key.EndsWith($":{_s}") || (_altsearch != null && i.Key.Contains(_altsearch))))
+                foreach (var mdb in FileDB.masterDb.Where(i => i.Key.StartsWith($"{_s}:") || i.Key.EndsWith($":{_s}") || (_altsearch != null && i.Key.Contains(_altsearch))))
                 {
-                    foreach (var t in FileDB.OpenRead(val.Key).Values)
+                    foreach (var t in FileDB.OpenRead(mdb.Key).Values)
                     {
                         if (t.types == null)
                             continue;
@@ -514,7 +543,7 @@ namespace JacRed.Controllers
                             string _o = StringConvert.SearchName(t.originalname);
 
                             if (_n == _s || _o == _s || (_altsearch != null && (_n == _altsearch || _o == _altsearch)))
-                                torrents.Add(t);
+                                AddTorrents(t);
                         }
                     }
 
@@ -524,15 +553,15 @@ namespace JacRed.Controllers
             else
             {
                 #region Поиск по совпадению ключа в имени
-                foreach (var val in FileDB.masterDb.OrderByDescending(i => i.Value).Where(i => i.Key.Contains(_s) || (_altsearch != null && i.Key.Contains(_altsearch))).Take(AppInit.conf.maxreadfile))
+                foreach (var mdb in FileDB.masterDb.OrderByDescending(i => i.Value).Where(i => i.Key.Contains(_s) || (_altsearch != null && i.Key.Contains(_altsearch))).Take(AppInit.conf.maxreadfile))
                 {
-                    foreach (var t in FileDB.OpenRead(val.Key).Values)
+                    foreach (var t in FileDB.OpenRead(mdb.Key).Values)
                     {
                         if (t.types == null)
                             continue;
 
                         if (string.IsNullOrWhiteSpace(type) || t.types.Contains(type))
-                            torrents.Add(t);
+                            AddTorrents(t);
                     }
 
                 }
@@ -542,20 +571,22 @@ namespace JacRed.Controllers
             if (torrents.Count == 0)
                 return Json(torrents);
 
+            IEnumerable<TorrentDetails> query = torrents.Values;
+
             #region sort
             switch (sort ?? string.Empty)
             {
                 case "sid":
-                    query = torrents.OrderByDescending(i => i.sid);
+                    query = query.OrderByDescending(i => i.sid);
                     break;
                 case "pir":
-                    query = torrents.OrderByDescending(i => i.pir);
+                    query = query.OrderByDescending(i => i.pir);
                     break;
                 case "size":
-                    query = torrents.OrderByDescending(i => i.size);
+                    query = query.OrderByDescending(i => i.size);
                     break;
                 default:
-                    query = torrents.OrderByDescending(i => i.createTime);
+                    query = query.OrderByDescending(i => i.createTime);
                     break;
             }
             #endregion

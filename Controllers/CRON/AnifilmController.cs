@@ -58,7 +58,7 @@ namespace JacRed.Controllers.CRON
                 {
                     foreach (string cat in new List<string>() { "serials", "ova", "ona", "movies" })
                     {
-                        await parsePage(cat, 1, DateTime.Now);
+                        await parsePage(cat, 1, DateTime.UtcNow);
                         log += $"{cat} - 1\n";
                     }
                 }

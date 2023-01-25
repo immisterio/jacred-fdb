@@ -144,7 +144,7 @@ namespace JacRed.Controllers.CRON
 
                 if (row.Contains("<span>Сегодня"))
                 {
-                    createTime = DateTime.Today;
+                    createTime = DateTime.UtcNow;
                 }
                 else if (row.Contains("<span>Вчера"))
                 {
