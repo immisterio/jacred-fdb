@@ -1,5 +1,5 @@
 # Установка
-curl -s https://raw.githubusercontent.com/immisterio/jac.red/main/install.sh | bash
+curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
 
 # Источники 
 Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Rezka, Baibako, LostFilm, Anilibria, Animelayer, Anifilm

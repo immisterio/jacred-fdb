@@ -14,7 +14,7 @@ source ~/.bashrc
 
 # Download zip
 mkdir $DEST -p && cd $DEST
-wget https://github.com/immisterio/jac.red/releases/latest/download/publish.zip
+wget https://github.com/immisterio/jacred-fdb/releases/latest/download/publish.zip
 unzip -o publish.zip
 rm -f publish.zip
 
