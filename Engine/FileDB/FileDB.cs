@@ -16,19 +16,15 @@ namespace JacRed.Engine
         #region FileDB
         string fdbkey;
 
-        DateTime updateTime = default;
+        bool savechanges = false;
 
-        FileDB(string key, bool openwrite = false)
+        FileDB(string key)
         {
             fdbkey = key;
             string fdbpath = pathDb(key);
 
             if (File.Exists(fdbpath))
-            {
                 db = JsonStream.Read<ConcurrentDictionary<string, TorrentDetails>>(fdbpath) ?? new ConcurrentDictionary<string, TorrentDetails>();
-                if (openwrite && db.Count > 0)
-                    updateTime = db.OrderByDescending(i => i.Value.updateTime).First().Value.updateTime;
-            }
         }
 
         ConcurrentDictionary<string, TorrentDetails> db = new ConcurrentDictionary<string, TorrentDetails>();
@@ -46,7 +42,11 @@ namespace JacRed.Engine
             {
                 var startUpdateTime = t.updateTime;
 
-                void upt() { t.updateTime = DateTime.UtcNow; }
+                void upt() 
+                {
+                    savechanges = true;
+                    t.updateTime = DateTime.UtcNow; 
+                }
 
                 #region types
                 if (torrent.types != null)
@@ -142,7 +142,7 @@ namespace JacRed.Engine
                     magnet = torrent.magnet
                 };
 
-                updateTime = default;
+                savechanges = true;
                 updateFullDetails(t);
                 db.TryAdd(t.url, t);
                 AddOrUpdateMasterDb(t);
@@ -153,15 +153,8 @@ namespace JacRed.Engine
         #region Dispose
         public void Dispose()
         {
-            if (db.Count > 0)
-            {
-                var upt = db.OrderByDescending(i => i.Value.updateTime).First().Value.updateTime;
-                if (upt > updateTime)
-                {
-                    updateTime = upt;
-                    JsonStream.Write(pathDb(fdbkey), db);
-                }
-            }
+            if (db.Count > 0 && savechanges)
+                JsonStream.Write(pathDb(fdbkey), db);
 
             if (openWriteTask.TryGetValue(fdbkey, out WriteTaskModel val))
             {

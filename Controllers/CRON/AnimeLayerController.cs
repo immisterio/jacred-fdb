@@ -154,7 +154,12 @@ namespace JacRed.Controllers.CRON
                 }
 
                 if (createTime == default)
-                    continue;
+                {
+                    if (page != 1)
+                        continue;
+
+                    createTime = DateTime.UtcNow;
+                }
                 #endregion
 
                 #region Данные раздачи
