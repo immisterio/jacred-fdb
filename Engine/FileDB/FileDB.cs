@@ -40,7 +40,8 @@ namespace JacRed.Engine
 
             if (db.TryGetValue(torrent.url, out TorrentDetails t))
             {
-                var startUpdateTime = t.updateTime;
+                t.checkTime = DateTime.Now;
+                long startUpdateTime = t.updateTime.ToFileTimeUtc();
 
                 void upt() 
                 {
@@ -118,7 +119,7 @@ namespace JacRed.Engine
                     upt();
                 }
 
-                if (startUpdateTime != t.updateTime)
+                if (startUpdateTime != t.updateTime.ToFileTimeUtc())
                     updateFullDetails(t);
 
                 AddOrUpdateMasterDb(t);
