@@ -16,7 +16,7 @@ namespace JacRed.Engine
         #region FileDB
         string fdbkey;
 
-        bool savechanges = false;
+        public bool savechanges = false;
 
         FileDB(string key)
         {
@@ -40,7 +40,6 @@ namespace JacRed.Engine
 
             if (db.TryGetValue(torrent.url, out TorrentDetails t))
             {
-                t.checkTime = DateTime.Now;
                 long startUpdateTime = t.updateTime.ToFileTimeUtc();
 
                 void upt() 
@@ -52,16 +51,21 @@ namespace JacRed.Engine
                 #region types
                 if (torrent.types != null)
                 {
-                    if (t.types == null || t.types.Length != torrent.types.Length)
-                        upt();
-
-                    foreach (string type in torrent.types)
+                    if (t.types == null)
                     {
-                        if (!t.types.Contains(type))
-                            upt();
+                        t.types = torrent.types;
+                        upt();
                     }
+                    else
+                    {
+                        foreach (string type in torrent.types)
+                        {
+                            if (type != null && !t.types.Contains(type))
+                                upt();
+                        }
 
-                    t.types = torrent.types;
+                        t.types = torrent.types;
+                    }
                 }
                 #endregion
 
@@ -122,6 +126,7 @@ namespace JacRed.Engine
                 if (startUpdateTime != t.updateTime.ToFileTimeUtc())
                     updateFullDetails(t);
 
+                t.checkTime = DateTime.Now;
                 AddOrUpdateMasterDb(t);
             }
             else
@@ -340,8 +345,12 @@ namespace JacRed.Engine
 
                 foreach (string v in allVoices)
                 {
-                    if (v.Length > 4 && t.title.ToLower().Contains(v.ToLower()))
-                        t.voices.Add(v);
+                    try
+                    {
+                        if (v.Length > 4 && t.title.ToLower().Contains(v.ToLower()))
+                            t.voices.Add(v);
+                    }
+                    catch { }
                 }
             }
             #endregion
@@ -351,92 +360,96 @@ namespace JacRed.Engine
 
             if (t.types != null)
             {
-                if (t.types.Contains("serial") || t.types.Contains("multserial") || t.types.Contains("docuserial") || t.types.Contains("tvshow") || t.types.Contains("anime"))
+                try
                 {
-                    if (Regex.IsMatch(t.title, "([0-9]+(\\-[0-9]+)?x[0-9]+|сезон|s[0-9]+)", RegexOptions.IgnoreCase))
+                    if (t.types.Contains("serial") || t.types.Contains("multserial") || t.types.Contains("docuserial") || t.types.Contains("tvshow") || t.types.Contains("anime"))
                     {
-                        if (Regex.IsMatch(t.title, "([0-9]+\\-[0-9]+x[0-9]+|[0-9]+\\-[0-9]+ сезон|s[0-9]+\\-[0-9]+)", RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(t.title, "([0-9]+(\\-[0-9]+)?x[0-9]+|сезон|s[0-9]+)", RegexOptions.IgnoreCase))
                         {
-                            #region Несколько сезонов
-                            int startSeason = 0, endSeason = 0;
+                            if (Regex.IsMatch(t.title, "([0-9]+\\-[0-9]+x[0-9]+|[0-9]+\\-[0-9]+ сезон|s[0-9]+\\-[0-9]+)", RegexOptions.IgnoreCase))
+                            {
+                                #region Несколько сезонов
+                                int startSeason = 0, endSeason = 0;
 
-                            if (Regex.IsMatch(t.title, "[0-9]+x[0-9]+", RegexOptions.IgnoreCase))
-                            {
-                                var g = Regex.Match(t.title, "([0-9]+)\\-([0-9]+)x", RegexOptions.IgnoreCase).Groups;
-                                int.TryParse(g[1].Value, out startSeason);
-                                int.TryParse(g[2].Value, out endSeason);
-                            }
-                            else if (Regex.IsMatch(t.title, "[0-9]+ сезон", RegexOptions.IgnoreCase))
-                            {
-                                var g = Regex.Match(t.title, "([0-9]+)\\-([0-9]+) сезон", RegexOptions.IgnoreCase).Groups;
-                                int.TryParse(g[1].Value, out startSeason);
-                                int.TryParse(g[2].Value, out endSeason);
-                            }
-                            else if (Regex.IsMatch(t.title, "s[0-9]+", RegexOptions.IgnoreCase))
-                            {
-                                var g = Regex.Match(t.title, "s([0-9]+)\\-([0-9]+)", RegexOptions.IgnoreCase).Groups;
-                                int.TryParse(g[1].Value, out startSeason);
-                                int.TryParse(g[2].Value, out endSeason);
-                            }
+                                if (Regex.IsMatch(t.title, "[0-9]+x[0-9]+", RegexOptions.IgnoreCase))
+                                {
+                                    var g = Regex.Match(t.title, "([0-9]+)\\-([0-9]+)x", RegexOptions.IgnoreCase).Groups;
+                                    int.TryParse(g[1].Value, out startSeason);
+                                    int.TryParse(g[2].Value, out endSeason);
+                                }
+                                else if (Regex.IsMatch(t.title, "[0-9]+ сезон", RegexOptions.IgnoreCase))
+                                {
+                                    var g = Regex.Match(t.title, "([0-9]+)\\-([0-9]+) сезон", RegexOptions.IgnoreCase).Groups;
+                                    int.TryParse(g[1].Value, out startSeason);
+                                    int.TryParse(g[2].Value, out endSeason);
+                                }
+                                else if (Regex.IsMatch(t.title, "s[0-9]+", RegexOptions.IgnoreCase))
+                                {
+                                    var g = Regex.Match(t.title, "s([0-9]+)\\-([0-9]+)", RegexOptions.IgnoreCase).Groups;
+                                    int.TryParse(g[1].Value, out startSeason);
+                                    int.TryParse(g[2].Value, out endSeason);
+                                }
 
-                            if (startSeason > 0 && endSeason > startSeason)
-                            {
-                                for (int s = startSeason; s <= endSeason; s++)
-                                    t.seasons.Add(s);
+                                if (startSeason > 0 && endSeason > startSeason)
+                                {
+                                    for (int s = startSeason; s <= endSeason; s++)
+                                        t.seasons.Add(s);
+                                }
+                                #endregion
                             }
-                            #endregion
-                        }
-                        if (Regex.IsMatch(t.title, "[0-9]+ сезон", RegexOptions.IgnoreCase))
-                        {
-                            #region Один сезон
                             if (Regex.IsMatch(t.title, "[0-9]+ сезон", RegexOptions.IgnoreCase))
                             {
-                                if (int.TryParse(Regex.Match(t.title, "([0-9]+) сезон", RegexOptions.IgnoreCase).Groups[1].Value, out int s) && s > 0)
-                                    t.seasons.Add(s);
+                                #region Один сезон
+                                if (Regex.IsMatch(t.title, "[0-9]+ сезон", RegexOptions.IgnoreCase))
+                                {
+                                    if (int.TryParse(Regex.Match(t.title, "([0-9]+) сезон", RegexOptions.IgnoreCase).Groups[1].Value, out int s) && s > 0)
+                                        t.seasons.Add(s);
+                                }
+                                #endregion
                             }
-                            #endregion
-                        }
-                        else if (Regex.IsMatch(t.title, "сезон(ы|и)?:? [0-9]+\\-[0-9]+", RegexOptions.IgnoreCase))
-                        {
-                            #region Несколько сезонов
-                            int startSeason = 0, endSeason = 0;
+                            else if (Regex.IsMatch(t.title, "сезон(ы|и)?:? [0-9]+\\-[0-9]+", RegexOptions.IgnoreCase))
+                            {
+                                #region Несколько сезонов
+                                int startSeason = 0, endSeason = 0;
 
-                            if (Regex.IsMatch(t.title, "сезон(ы|и)?:? [0-9]+", RegexOptions.IgnoreCase))
-                            {
-                                var g = Regex.Match(t.title, "сезон(ы|и)?:? ([0-9]+)\\-([0-9]+)", RegexOptions.IgnoreCase).Groups;
-                                int.TryParse(g[2].Value, out startSeason);
-                                int.TryParse(g[3].Value, out endSeason);
-                            }
+                                if (Regex.IsMatch(t.title, "сезон(ы|и)?:? [0-9]+", RegexOptions.IgnoreCase))
+                                {
+                                    var g = Regex.Match(t.title, "сезон(ы|и)?:? ([0-9]+)\\-([0-9]+)", RegexOptions.IgnoreCase).Groups;
+                                    int.TryParse(g[2].Value, out startSeason);
+                                    int.TryParse(g[3].Value, out endSeason);
+                                }
 
-                            if (startSeason > 0 && endSeason > startSeason)
-                            {
-                                for (int s = startSeason; s <= endSeason; s++)
-                                    t.seasons.Add(s);
+                                if (startSeason > 0 && endSeason > startSeason)
+                                {
+                                    for (int s = startSeason; s <= endSeason; s++)
+                                        t.seasons.Add(s);
+                                }
+                                #endregion
                             }
-                            #endregion
-                        }
-                        else
-                        {
-                            #region Один сезон
-                            if (Regex.IsMatch(t.title, "[0-9]+x[0-9]+", RegexOptions.IgnoreCase))
+                            else
                             {
-                                if (int.TryParse(Regex.Match(t.title, "([0-9]+)x", RegexOptions.IgnoreCase).Groups[1].Value, out int s) && s > 0)
-                                    t.seasons.Add(s);
+                                #region Один сезон
+                                if (Regex.IsMatch(t.title, "[0-9]+x[0-9]+", RegexOptions.IgnoreCase))
+                                {
+                                    if (int.TryParse(Regex.Match(t.title, "([0-9]+)x", RegexOptions.IgnoreCase).Groups[1].Value, out int s) && s > 0)
+                                        t.seasons.Add(s);
+                                }
+                                else if (Regex.IsMatch(t.title, "сезон(ы|и)?:? [0-9]+", RegexOptions.IgnoreCase))
+                                {
+                                    if (int.TryParse(Regex.Match(t.title, "сезон(ы|и)?:? ([0-9]+)", RegexOptions.IgnoreCase).Groups[2].Value, out int s) && s > 0)
+                                        t.seasons.Add(s);
+                                }
+                                else if (Regex.IsMatch(t.title, "s[0-9]+", RegexOptions.IgnoreCase))
+                                {
+                                    if (int.TryParse(Regex.Match(t.title, "s([0-9]+)", RegexOptions.IgnoreCase).Groups[1].Value, out int s) && s > 0)
+                                        t.seasons.Add(s);
+                                }
+                                #endregion
                             }
-                            else if (Regex.IsMatch(t.title, "сезон(ы|и)?:? [0-9]+", RegexOptions.IgnoreCase))
-                            {
-                                if (int.TryParse(Regex.Match(t.title, "сезон(ы|и)?:? ([0-9]+)", RegexOptions.IgnoreCase).Groups[2].Value, out int s) && s > 0)
-                                    t.seasons.Add(s);
-                            }
-                            else if (Regex.IsMatch(t.title, "s[0-9]+", RegexOptions.IgnoreCase))
-                            {
-                                if (int.TryParse(Regex.Match(t.title, "s([0-9]+)", RegexOptions.IgnoreCase).Groups[1].Value, out int s) && s > 0)
-                                    t.seasons.Add(s);
-                            }
-                            #endregion
                         }
                     }
                 }
+                catch { }
             }
             #endregion
         }
