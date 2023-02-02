@@ -35,9 +35,6 @@ namespace JacRed.Engine
         #region AddOrUpdate
         public void AddOrUpdate(TorrentBaseDetails torrent)
         {
-            if (string.IsNullOrWhiteSpace(torrent.magnet) || torrent.types == null || torrent.types.Length == 0)
-                return;
-
             if (db.TryGetValue(torrent.url, out TorrentDetails t))
             {
                 long startUpdateTime = t.updateTime.ToFileTimeUtc();
@@ -131,6 +128,9 @@ namespace JacRed.Engine
             }
             else
             {
+                if (string.IsNullOrWhiteSpace(torrent.magnet) || torrent.types == null || torrent.types.Length == 0)
+                    return;
+
                 t = new TorrentDetails()
                 {
                     url = torrent.url,
