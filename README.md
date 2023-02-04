@@ -1,6 +1,10 @@
 # Установка
 curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
 
+# Настройка парсера
+1. Настроить init.conf
+2. Перенести в crontab "Data/crontab" или указать сервер "syncapi" в init.conf 
+
 # Источники 
 Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Rezka, Baibako, LostFilm, Anilibria, Animelayer, Anifilm
 
