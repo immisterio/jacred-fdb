@@ -167,7 +167,7 @@ namespace JacRed.Engine
             {
                 val.openconnection -= 1;
                 if (val.openconnection <= 0 && !AppInit.conf.evercache)
-                    openWriteTask.Remove(fdbkey);
+                    openWriteTask.TryRemove(fdbkey, out _);
             }
         }
         #endregion

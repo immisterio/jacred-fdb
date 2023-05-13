@@ -18,7 +18,7 @@ namespace JacRed.Engine
         /// </summary>
         public static ConcurrentDictionary<string, DateTime> masterDb = new ConcurrentDictionary<string, DateTime>();
 
-        static Dictionary<string, WriteTaskModel> openWriteTask = new Dictionary<string, WriteTaskModel>();
+        static ConcurrentDictionary<string, WriteTaskModel> openWriteTask = new ConcurrentDictionary<string, WriteTaskModel>();
 
         static FileDB()
         {

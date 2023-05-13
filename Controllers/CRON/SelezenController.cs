@@ -141,9 +141,9 @@ namespace JacRed.Controllers.CRON
 
             _parseAllTaskWork = true;
 
-            try
+            foreach (var val in taskParse.ToArray())
             {
-                foreach (var val in taskParse.ToArray())
+                try
                 {
                     if (DateTime.Today == val.updateTime)
                         continue;
@@ -154,8 +154,8 @@ namespace JacRed.Controllers.CRON
                     if (res)
                         val.updateTime = DateTime.Today;
                 }
+                catch { }
             }
-            catch { }
 
             _parseAllTaskWork = false;
             return "ok";
@@ -167,7 +167,7 @@ namespace JacRed.Controllers.CRON
         async Task<bool> parsePage(int page)
         {
             #region Авторизация
-            if (Cookie == null && AppInit.conf.Selezen.cookie == null)
+            if (Cookie == null && string.IsNullOrEmpty(AppInit.conf.Selezen.cookie))
             {
                 if (await TakeLogin() == false)
                     return false;
