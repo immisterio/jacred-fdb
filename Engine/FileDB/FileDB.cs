@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -24,18 +23,16 @@ namespace JacRed.Engine
             string fdbpath = pathDb(key);
 
             if (File.Exists(fdbpath))
-                db = JsonStream.Read<ConcurrentDictionary<string, TorrentDetails>>(fdbpath) ?? new ConcurrentDictionary<string, TorrentDetails>();
+                Database = JsonStream.Read<Dictionary<string, TorrentDetails>>(fdbpath) ?? new Dictionary<string, TorrentDetails>();
         }
 
-        ConcurrentDictionary<string, TorrentDetails> db = new ConcurrentDictionary<string, TorrentDetails>();
-
-        public IReadOnlyDictionary<string, TorrentDetails> Database => db;
+        public Dictionary<string, TorrentDetails> Database = new Dictionary<string, TorrentDetails>();
         #endregion
 
         #region AddOrUpdate
         public void AddOrUpdate(TorrentBaseDetails torrent)
         {
-            if (db.TryGetValue(torrent.url, out TorrentDetails t))
+            if (Database.TryGetValue(torrent.url, out TorrentDetails t))
             {
                 long startUpdateTime = t.updateTime.ToFileTimeUtc();
 
@@ -150,7 +147,7 @@ namespace JacRed.Engine
 
                 savechanges = true;
                 updateFullDetails(t);
-                db.TryAdd(t.url, t);
+                Database.TryAdd(t.url, t);
                 AddOrUpdateMasterDb(t);
             }
         }
@@ -159,14 +156,14 @@ namespace JacRed.Engine
         #region Dispose
         public void Dispose()
         {
-            if (db.Count > 0 && savechanges)
-                JsonStream.Write(pathDb(fdbkey), db);
+            if (Database.Count > 0 && savechanges)
+                JsonStream.Write(pathDb(fdbkey), Database);
 
             if (openWriteTask.TryGetValue(fdbkey, out WriteTaskModel val))
             {
                 val.openconnection -= 1;
                 if (val.openconnection <= 0 && !AppInit.conf.evercache)
-                    openWriteTask.TryRemove(fdbkey, out _);
+                    openWriteTask.Remove(fdbkey);
             }
         }
         #endregion

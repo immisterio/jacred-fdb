@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -16,14 +15,14 @@ namespace JacRed.Engine
         /// $"{search_name}:{search_originalname}"
         /// Верхнее время изменения 
         /// </summary>
-        public static ConcurrentDictionary<string, DateTime> masterDb = new ConcurrentDictionary<string, DateTime>();
+        public static Dictionary<string, DateTime> masterDb = new Dictionary<string, DateTime>();
 
-        static ConcurrentDictionary<string, WriteTaskModel> openWriteTask = new ConcurrentDictionary<string, WriteTaskModel>();
+        static Dictionary<string, WriteTaskModel> openWriteTask = new Dictionary<string, WriteTaskModel>();
 
         static FileDB()
         {
             if (File.Exists("Data/masterDb.bz"))
-                masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>("Data/masterDb.bz");
+                masterDb = JsonStream.Read<Dictionary<string, DateTime>>("Data/masterDb.bz");
         }
         #endregion
 

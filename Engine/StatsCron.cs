@@ -19,7 +19,7 @@ namespace JacRed.Engine
                 {
                     var stats = new Dictionary<string, (DateTime lastnewtor, int newtor, int update, int check, int alltorrents)>();
 
-                    foreach (var item in FileDB.masterDb)
+                    foreach (var item in FileDB.masterDb.ToArray())
                     {
                         foreach (var t in FileDB.OpenRead(item.Key).Values)
                         {
