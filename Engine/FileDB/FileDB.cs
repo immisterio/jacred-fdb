@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using JacRed.Engine.CORE;
 using JacRed.Models;
 using JacRed.Models.Details;
+using Newtonsoft.Json;
 
 namespace JacRed.Engine
 {
@@ -119,6 +120,9 @@ namespace JacRed.Engine
 
                 if (startUpdateTime != t.updateTime.ToFileTimeUtc())
                     updateFullDetails(t);
+
+                else if (AppInit.conf.log)
+                    File.AppendAllText("Data/log/fdb.txt", JsonConvert.SerializeObject(new List<TorrentBaseDetails>() { torrent, t }, Formatting.Indented) + ",\n\n");
 
                 t.checkTime = DateTime.Now;
                 AddOrUpdateMasterDb(t);
