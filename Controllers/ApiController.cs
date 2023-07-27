@@ -12,6 +12,7 @@ using System;
 using System.Web;
 using MonoTorrent;
 using JacRed.Models.Details;
+using JacRed.Models.Tracks;
 
 namespace JacRed.Controllers
 {
@@ -126,6 +127,9 @@ namespace JacRed.Controllers
                                 #region Фильм
                                 if (t.types.Contains("movie") || t.types.Contains("multfilm") || t.types.Contains("anime") || t.types.Contains("documovie"))
                                 {
+                                    if (Regex.IsMatch(t.title, " (сезон|сери(и|я|й))", RegexOptions.IgnoreCase))
+                                        continue;
+
                                     if (year > 0)
                                     {
                                         if (t.relased == year || t.relased == (year - 1) || t.relased == (year + 1))
@@ -385,7 +389,7 @@ namespace JacRed.Controllers
                                 }
                             }
 
-                            t.torrent.magnet= magnet ;
+                            t.torrent.magnet= magnet;
                         }
                         #endregion
 
@@ -447,11 +451,48 @@ namespace JacRed.Controllers
 
                         if (torrent.createTime > t.torrent.createTime)
                             t.torrent.createTime = torrent.createTime;
+
+                        if (torrent.voices != null && torrent.voices.Count > 0)
+                        {
+                            if (t.torrent.voices == null)
+                                t.torrent.voices = new HashSet<string>();
+
+                            foreach (var v in torrent.voices)
+                                t.torrent.voices.Add(v);
+                        }
+
+                        if (torrent.languages != null && torrent.languages.Count > 0)
+                        {
+                            if (t.torrent.languages == null)
+                                t.torrent.languages = new HashSet<string>();
+
+                            foreach (var v in torrent.languages)
+                                t.torrent.languages.Add(v);
+                        }
+
+                        if (t.torrent.ffprobe == null)
+                            t.torrent.ffprobe = torrent.ffprobe;
                     }
                 }
 
                 foreach (var item in temp.Select(i => i.Value.torrent))
                     tsort.Add(item);
+            }
+            #endregion
+
+            #region FFprobe
+            List<ffStream> FFprobe(TorrentDetails t, out HashSet<string> langs)
+            {
+                langs = t.languages;
+                if (t.ffprobe != null)
+                    return t.ffprobe;
+
+                var streams = TracksDB.Get(t.magnet, t.types);
+                if (streams == null) 
+                    return null;
+
+                langs = TracksDB.Languages(t, streams);
+                return streams;
             }
             #endregion
 
@@ -468,9 +509,25 @@ namespace JacRed.Controllers
                     CategoryDesc = categoryDesc,
                     Seeders = i.sid,
                     Peers = i.pir,
-                    MagnetUri = i.magnet
-                })
-            });
+                    MagnetUri = i.magnet,
+                    ffprobe = FFprobe(i, out HashSet<string> languages),
+                    languages,
+                    info = new 
+                    {
+                        i.name,
+                        i.originalname,
+                        i.sizeName,
+                        i.relased,
+                        i.videotype,
+                        i.quality,
+                        i.voices,
+                        seasons = i.seasons != null && i.seasons.Count > 0 ? i.seasons : null,
+                        i.types,
+                    }
+                }),
+                jacred = true
+
+            }, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
             if (setcache && !AppInit.conf.evercache)
                 memoryCache.Set(memoryKey, jval, DateTime.Now.AddMinutes(10));

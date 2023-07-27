@@ -47,6 +47,10 @@ namespace JacRed
 
         public bool opensync = true;
 
+        public bool tracks = false;
+
+        public string tsuri = "http://127.0.0.1:8090";
+
         public bool log = false;
 
         public string syncapi = null;
