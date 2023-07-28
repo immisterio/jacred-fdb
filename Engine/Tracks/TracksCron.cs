@@ -19,7 +19,7 @@ namespace JacRed.Engine
         {
             while (true)
             {
-                await Task.Delay(TimeSpan.FromMinutes(20));
+                await Task.Delay(TimeSpan.FromMinutes(typetask == 1 ? 60 : 180));
                 if (AppInit.conf.tracks == false || AppInit.conf.evercache == false)
                     continue;
 
@@ -102,7 +102,7 @@ namespace JacRed.Engine
                             if (TracksDB.Get(t.Value.magnet) == null)
                             {
                                 _ = TracksDB.Add(t.Value.magnet);
-                                await Task.Delay(typetask == 3 || typetask == 4 ? 1000 : 2000);
+                                await Task.Delay(typetask == 3 || typetask == 4 ? 800 : 2000);
                             }
                         }
                         catch { }

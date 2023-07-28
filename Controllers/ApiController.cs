@@ -470,7 +470,7 @@ namespace JacRed.Controllers
                                 t.torrent.languages.Add(v);
                         }
 
-                        if (t.torrent.ffprobe == null)
+                        if (t.torrent.ffprobe == null && torrent.ffprobe != null)
                             t.torrent.ffprobe = torrent.ffprobe;
                     }
                 }
@@ -523,6 +523,7 @@ namespace JacRed.Controllers
                         i.voices,
                         seasons = i.seasons != null && i.seasons.Count > 0 ? i.seasons : null,
                         i.types,
+                        i.checkTime
                     }
                 }),
                 jacred = true

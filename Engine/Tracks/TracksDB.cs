@@ -126,6 +126,12 @@ namespace JacRed.Engine
             {
                 var languages = new HashSet<string>();
 
+                if (t.languages != null)
+                {
+                    foreach (var l in t.languages)
+                        languages.Add(l);
+                }
+
                 if (streams != null)
                 {
                     foreach (var item in streams)
@@ -134,12 +140,6 @@ namespace JacRed.Engine
                             languages.Add(item.tags.language);
                     }
                 }
-
-                if (t.title.ToLower().Contains("ukr") || t.trackerName == "toloka")
-                    languages.Add("ukr");
-
-                if (t.trackerName == "lostfilm")
-                    languages.Add("rus");
 
                 if (languages.Count == 0)
                     return null;
