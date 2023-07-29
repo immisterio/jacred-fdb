@@ -35,7 +35,7 @@ namespace JacRed.Controllers
 
         #region Jackett
         [Route("/api/v2.0/indexers/{status}/results")]
-        public ActionResult Jackett(string query, string title, string title_original, int year, int is_serial, Dictionary<string, string> category)
+        public ActionResult Jackett(string apikey, string query, string title, string title_original, int year, int is_serial, Dictionary<string, string> category)
         {
             bool rqnum = false, setcache = false;
             var torrents = new Dictionary<string, TorrentDetails>();
@@ -496,9 +496,13 @@ namespace JacRed.Controllers
             }
             #endregion
 
+            var result = tsort.OrderByDescending(i => i.createTime).Take(2_000);
+            if (apikey == "rus")
+                result = result.Where(i => i.languages != null && i.languages.Contains("rus"));
+
             jval = JsonConvert.SerializeObject(new
             {
-                Results = tsort.OrderByDescending(i => i.createTime).Take(2_000).Select(i => new
+                Results = result.Select(i => new
                 {
                     Tracker = i.trackerName,
                     Details = i.url != null && i.url.StartsWith("http") ? i.url : null,
