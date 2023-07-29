@@ -49,7 +49,9 @@ namespace JacRed
 
         public bool tracks = false;
 
-        public string tsuri = "http://127.0.0.1:8090";
+        public int tracksdelay = 5000;
+
+        public string[] tsuri = new string[] { "http://127.0.0.1:8090" };
 
         public bool log = false;
 

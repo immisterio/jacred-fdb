@@ -36,7 +36,7 @@ namespace JacRed.Engine
             if (types == null || types.Length == 0)
                 return true;
 
-            if (types.Contains("sport") || types.Contains("anime") || types.Contains("tvshow") || types.Contains("docuserial"))
+            if (types.Contains("sport") || types.Contains("tvshow") || types.Contains("docuserial"))
                 return true;
 
             return false;
@@ -73,9 +73,15 @@ namespace JacRed.Engine
             if (types != null && theBad(types))
                 return;
 
-            ffprobemodel res = null;
+            if (AppInit.conf.tsuri == null || AppInit.conf.tsuri.Length == 0)
+                return;
+
             string infohash = MagnetLink.Parse(magnet).InfoHash.ToHex();
-            string tsuri = $"{AppInit.conf.tsuri}:10{random.Next(10, 90)}";
+            if (string.IsNullOrEmpty(infohash))
+                return;
+
+            ffprobemodel res = null;
+            string tsuri = AppInit.conf.tsuri[random.Next(0, AppInit.conf.tsuri.Length)];
 
             #region ffprobe
             try
