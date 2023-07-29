@@ -33,9 +33,22 @@ namespace JacRed.Controllers
             var torrents = new Dictionary<string, (DateTime, IReadOnlyDictionary<string, TorrentDetails>)>();
             foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync).ToArray())
             {
-                var torrent = FileDB.OpenRead(item.Key);
-                countread = countread + torrent.Count;
+                var torrent = new Dictionary<string, TorrentDetails>();
+                foreach (var t in FileDB.OpenRead(item.Key))
+                {
+                    var _t = (TorrentDetails)t.Value.Clone();
 
+                    var streams = TracksDB.Get(_t.magnet, _t.types);
+                    if (streams != null)
+                    {
+                        _t.ffprobe = streams;
+                        _t.languages = TracksDB.Languages(_t, streams);
+                    }
+
+                    torrent.TryAdd(t.Key, _t);
+                }
+
+                countread = countread + torrent.Count;
                 torrents.TryAdd(item.Key, (item.Value, torrent));
 
                 if (countread > take)
