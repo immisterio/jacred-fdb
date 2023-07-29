@@ -102,7 +102,7 @@ namespace JacRed.Engine
                             if (TracksDB.Get(t.Value.magnet) == null)
                             {
                                 _ = TracksDB.Add(t.Value.magnet);
-                                await Task.Delay(typetask == 3 || typetask == 4 ? 800 : 2000);
+                                await Task.Delay(2000);
                             }
                         }
                         catch { }

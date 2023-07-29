@@ -309,15 +309,11 @@ namespace JacRed.Engine
             {
                 foreach (string v in ukrVoices)
                 {
-                    try
+                    if (t.voices.Contains(v))
                     {
-                        if (v.Length > 3 && titlelower.Contains(v.ToLower()))
-                        {
-                            t.languages.Add("ukr");
-                            break;
-                        }
+                        t.languages.Add("ukr");
+                        break;
                     }
-                    catch { }
                 }
             }
 
@@ -325,15 +321,11 @@ namespace JacRed.Engine
             {
                 foreach (string v in rusVoices)
                 {
-                    try
+                    if (t.voices.Contains(v))
                     {
-                        if (v.Length > 3 && titlelower.Contains(v.ToLower()))
-                        {
-                            t.languages.Add("rus");
-                            break;
-                        }
+                        t.languages.Add("rus");
+                        break;
                     }
-                    catch { }
                 }
             }
             #endregion

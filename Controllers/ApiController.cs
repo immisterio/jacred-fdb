@@ -522,8 +522,7 @@ namespace JacRed.Controllers
                         i.quality,
                         i.voices,
                         seasons = i.seasons != null && i.seasons.Count > 0 ? i.seasons : null,
-                        i.types,
-                        i.checkTime
+                        i.types
                     }
                 }),
                 jacred = true
