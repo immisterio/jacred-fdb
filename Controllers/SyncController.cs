@@ -84,14 +84,23 @@ namespace JacRed.Controllers
             {
                 foreach (var torrent in FileDB.OpenRead(item.Key))
                 {
+                    var _t = (TorrentDetails)torrent.Value.Clone();
+
+                    var streams = TracksDB.Get(_t.magnet, _t.types);
+                    if (streams != null)
+                    {
+                        _t.ffprobe = streams;
+                        _t.languages = TracksDB.Languages(_t, streams);
+                    }
+
                     if (torrents.TryGetValue(torrent.Key, out TorrentDetails val))
                     {
                         if (torrent.Value.updateTime > val.updateTime)
-                            torrents[torrent.Key] = torrent.Value;
+                            torrents[torrent.Key] = _t;
                     }
                     else
                     {
-                        torrents.TryAdd(torrent.Key, torrent.Value);
+                        torrents.TryAdd(torrent.Key, _t);
                     }
                 }
 
