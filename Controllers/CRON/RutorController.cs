@@ -176,6 +176,9 @@ namespace JacRed.Controllers.CRON
                 if (cat == "17" && !title.Contains(" UKR"))
                     continue;
 
+                if (title.Contains(" КПК"))
+                    continue;
+
                 url = $"{AppInit.conf.Rutor.host}/{url}";
                 #endregion
 

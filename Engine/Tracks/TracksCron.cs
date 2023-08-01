@@ -20,7 +20,7 @@ namespace JacRed.Engine
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(typetask == 1 ? 60 : 180));
-                if (AppInit.conf.tracks == false || AppInit.conf.evercache == false)
+                if (AppInit.conf.tracks == false)
                     continue;
 
                 try

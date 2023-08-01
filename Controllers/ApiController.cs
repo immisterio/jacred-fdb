@@ -113,7 +113,7 @@ namespace JacRed.Controllers
                 {
                     foreach (var t in FileDB.OpenRead(val.Key).Values)
                     {
-                        if (t.types == null)
+                        if (t.types == null || t.title.Contains(" КПК"))
                             continue;
 
                         string name = StringConvert.SearchName(t.name);
@@ -256,7 +256,7 @@ namespace JacRed.Controllers
                                     continue;
                             }
 
-                            if (t.types == null)
+                            if (t.types == null || t.title.Contains(" КПК"))
                                 continue;
 
                             if (is_serial == 1)
