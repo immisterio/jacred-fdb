@@ -50,10 +50,13 @@ namespace JacRed.Engine
 
                                 if (AppInit.conf.tracks && !TracksDB.theBad(t.types))
                                 {
-                                    if (TracksDB.Get(t.magnet) != null)
-                                        s.trkconfirm = s.trkconfirm + 1;
-                                    else
-                                        s.trkwait = s.trkwait + 1;
+                                    if (!string.IsNullOrEmpty(t.magnet) && t.sid > 0 && t.updateTime > DateTime.Today.AddDays(-20))
+                                    {
+                                        if (TracksDB.Get(t.magnet) != null)
+                                            s.trkconfirm = s.trkconfirm + 1;
+                                        else
+                                            s.trkwait = s.trkwait + 1;
+                                    }
                                 }
 
                                 stats[t.trackerName] = s;

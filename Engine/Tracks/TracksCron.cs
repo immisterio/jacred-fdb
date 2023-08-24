@@ -1,9 +1,7 @@
 ﻿using MonoTorrent;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace JacRed.Engine
 {
@@ -23,10 +21,13 @@ namespace JacRed.Engine
                 if (AppInit.conf.tracks == false)
                     continue;
 
+                if (AppInit.conf.tracksmod == 1 && (typetask == 3 || typetask == 4))
+                    continue;
+
                 try
                 {
                     var starttime = DateTime.Now;
-                    var torrents = new Dictionary<string, (int sid, string magnet)>();
+                    var torrents = new List<(string trackerName, string magnet)>();
 
                     foreach (var item in FileDB.masterDb.ToArray())
                     {
@@ -77,31 +78,31 @@ namespace JacRed.Engine
                                     if (TracksDB.theBad(t.types))
                                         continue;
 
-                                    var magnetLink = MagnetLink.Parse(t.magnet);
-                                    string hex = magnetLink.InfoHash.ToHex();
-                                    if (hex == null)
-                                        continue;
+                                    //var magnetLink = MagnetLink.Parse(t.magnet);
+                                    //string hex = magnetLink.InfoHash.ToHex();
+                                    //if (hex == null)
+                                    //    continue;
 
-                                    torrents.TryAdd(hex, (t.sid, t.magnet));
+                                    torrents.Add((t.trackerName, t.magnet));
                                 }
                                 catch { }
                             }
                         }
                     }
 
-                    foreach (var t in torrents.OrderByDescending(i => i.Value.sid))
+                    foreach (var t in torrents)
                     {
                         try
                         {
-                            if (typetask == 2 && DateTime.Now > starttime.AddDays(3))
+                            if (typetask == 2 && DateTime.Now > starttime.AddDays(10))
                                 break;
 
-                            if ((typetask == 3 || typetask == 4) && DateTime.Now > starttime.AddDays(10))
+                            if ((typetask == 3 || typetask == 4) && DateTime.Now > starttime.AddMonths(2))
                                 break;
 
-                            if (TracksDB.Get(t.Value.magnet) == null)
+                            if (TracksDB.Get(t.magnet) == null)
                             {
-                                _ = TracksDB.Add(t.Value.magnet);
+                                _ = TracksDB.Add(t.magnet);
                                 await Task.Delay(AppInit.conf.tracksdelay);
                             }
                         }

@@ -49,6 +49,12 @@ namespace JacRed
 
         public bool tracks = false;
 
+        /// <summary>
+        /// 0 - все
+        /// 1 - день, месяц
+        /// </summary>
+        public int tracksmod = 0;
+
         public int tracksdelay = 5000;
 
         public string[] tsuri = new string[] { "http://127.0.0.1:8090" };
