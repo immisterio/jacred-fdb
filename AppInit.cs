@@ -43,6 +43,8 @@ namespace JacRed
 
         public bool mergeduplicates = true;
 
+        public bool mergenumduplicates = true;
+
         public bool openstats = true;
 
         public bool opensync = true;
@@ -65,7 +67,7 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public int maxreadfile = 80;
+        public int maxreadfile = 200;
 
         public bool evercache = false;
 

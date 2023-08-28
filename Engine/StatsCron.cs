@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,7 +49,7 @@ namespace JacRed.Engine
 
                                 if (AppInit.conf.tracks && !TracksDB.theBad(t.types))
                                 {
-                                    if (!string.IsNullOrEmpty(t.magnet) && t.sid > 0 && t.updateTime > DateTime.Today.AddDays(-20))
+                                    if (!string.IsNullOrEmpty(t.magnet))
                                     {
                                         if (TracksDB.Get(t.magnet) != null)
                                             s.trkconfirm = s.trkconfirm + 1;

@@ -83,7 +83,8 @@ namespace JacRed.Engine
                                     //if (hex == null)
                                     //    continue;
 
-                                    torrents.Add((t.trackerName, t.magnet));
+                                    if (typetask == 1 || (t.sid > 0 && t.updateTime > DateTime.Today.AddDays(-20)))
+                                        torrents.Add((t.trackerName, t.magnet));
                                 }
                                 catch { }
                             }
