@@ -1,6 +1,8 @@
-﻿using MonoTorrent;
+﻿using JacRed.Models.Details;
+using MonoTorrent;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace JacRed.Engine
@@ -27,7 +29,7 @@ namespace JacRed.Engine
                 try
                 {
                     var starttime = DateTime.Now;
-                    var torrents = new List<(string trackerName, string magnet)>();
+                    var torrents = new List<TorrentDetails>();
 
                     foreach (var item in FileDB.masterDb.ToArray())
                     {
@@ -75,7 +77,7 @@ namespace JacRed.Engine
                             {
                                 try
                                 {
-                                    if (TracksDB.theBad(t.types))
+                                    if (TracksDB.theBad(t.types) || t.ffprobe != null)
                                         continue;
 
                                     //var magnetLink = MagnetLink.Parse(t.magnet);
@@ -84,14 +86,14 @@ namespace JacRed.Engine
                                     //    continue;
 
                                     if (typetask == 1 || (t.sid > 0 && t.updateTime > DateTime.Today.AddDays(-20)))
-                                        torrents.Add((t.trackerName, t.magnet));
+                                        torrents.Add(t);
                                 }
                                 catch { }
                             }
                         }
                     }
 
-                    foreach (var t in torrents)
+                    foreach (var t in torrents.OrderByDescending(i => i.updateTime))
                     {
                         try
                         {
@@ -101,8 +103,12 @@ namespace JacRed.Engine
                             if ((typetask == 3 || typetask == 4) && DateTime.Now > starttime.AddMonths(2))
                                 break;
 
+                            if ((typetask == 3 || typetask == 4) && t.ffprobe_tryingdata >= 3)
+                                continue;
+
                             if (TracksDB.Get(t.magnet) == null)
                             {
+                                t.ffprobe_tryingdata++;
                                 _ = TracksDB.Add(t.magnet);
                                 await Task.Delay(AppInit.conf.tracksdelay);
                             }

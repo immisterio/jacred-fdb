@@ -47,15 +47,12 @@ namespace JacRed.Engine
                                 if (t.checkTime >= today)
                                     s.check = s.check + 1;
 
-                                if (AppInit.conf.tracks && !TracksDB.theBad(t.types))
+                                if (!TracksDB.theBad(t.types) && !string.IsNullOrEmpty(t.magnet) && t.ffprobe_tryingdata < 3)
                                 {
-                                    if (!string.IsNullOrEmpty(t.magnet))
-                                    {
-                                        if (TracksDB.Get(t.magnet) != null)
-                                            s.trkconfirm = s.trkconfirm + 1;
-                                        else
-                                            s.trkwait = s.trkwait + 1;
-                                    }
+                                    if (TracksDB.Get(t.magnet) != null || t.ffprobe != null)
+                                        s.trkconfirm = s.trkconfirm + 1;
+                                    else
+                                        s.trkwait = s.trkwait + 1;
                                 }
 
                                 stats[t.trackerName] = s;

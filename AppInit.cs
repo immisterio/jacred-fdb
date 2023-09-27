@@ -57,7 +57,7 @@ namespace JacRed
         /// </summary>
         public int tracksmod = 0;
 
-        public int tracksdelay = 5000;
+        public int tracksdelay = 20_000;
 
         public string[] tsuri = new string[] { "http://127.0.0.1:8090" };
 

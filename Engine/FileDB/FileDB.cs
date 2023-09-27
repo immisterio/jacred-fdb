@@ -81,6 +81,7 @@ namespace JacRed.Engine
 
                 if (!string.IsNullOrWhiteSpace(torrent.magnet) && torrent.magnet != t.magnet)
                 {
+                    t.ffprobe_tryingdata = 0;
                     t.magnet = torrent.magnet;
                     upt();
                 }
