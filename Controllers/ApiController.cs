@@ -35,7 +35,7 @@ namespace JacRed.Controllers
 
         #region Jackett
         [Route("/api/v2.0/indexers/{status}/results")]
-        public ActionResult Jackett(string apikey, string query, string title, string title_original, int year, int is_serial, Dictionary<string, string> category)
+        public ActionResult Jackett(string apikey, string query, string title, string title_original, int year, Dictionary<string, string> category, int is_serial = -1)
         {
             bool rqnum = false, setcache = false;
             var torrents = new Dictionary<string, TorrentDetails>();
@@ -56,6 +56,9 @@ namespace JacRed.Controllers
                     year = int.Parse(g[3].Value);
                 }
             }
+
+            if (!rqnum)
+                rqnum = !HttpContext.Request.QueryString.Value.Contains("&is_serial=") && HttpContext.Request.Headers.UserAgent.ToString() == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
             #endregion
 
             #region category
@@ -302,9 +305,14 @@ namespace JacRed.Controllers
                 }
                 #endregion
 
-                torrentsSearch(exact: true);
-                if (torrents.Count == 0)
+                if (is_serial == -1)
                     torrentsSearch(exact: false);
+                else
+                {
+                    torrentsSearch(exact: true);
+                    if (torrents.Count == 0)
+                        torrentsSearch(exact: false);
+                }
                 #endregion
             }
 
@@ -354,7 +362,7 @@ namespace JacRed.Controllers
             #region Объединить дубликаты
             var tsort = new List<TorrentDetails>();
 
-            if (AppInit.conf.mergeduplicates || (rqnum && AppInit.conf.mergenumduplicates))
+            if ((!rqnum && AppInit.conf.mergeduplicates) || (rqnum && AppInit.conf.mergenumduplicates))
             {
                 Dictionary<string, (TorrentDetails torrent, string title, string Name, List<string> AnnounceUrls)> temp = new Dictionary<string, (TorrentDetails, string, string, List<string>)>();
 
@@ -508,6 +516,8 @@ namespace JacRed.Controllers
             if (apikey == "rus")
                 result = result.Where(i => (i.languages != null && i.languages.Contains("rus")) || (i.types != null && (i.types.Contains("sport") || i.types.Contains("tvshow") || i.types.Contains("docuserial"))));
 
+            HashSet<string> languages = null;
+
             jval = JsonConvert.SerializeObject(new
             {
                 Results = result.Select(i => new
@@ -522,9 +532,9 @@ namespace JacRed.Controllers
                     Seeders = i.sid,
                     Peers = i.pir,
                     MagnetUri = i.magnet,
-                    ffprobe = FFprobe(i, out HashSet<string> languages),
-                    languages,
-                    info = new 
+                    ffprobe = rqnum ? null : FFprobe(i, out languages),
+                    languages = rqnum ? null : languages,
+                    info = rqnum ? null : new 
                     {
                         i.name,
                         i.originalname,

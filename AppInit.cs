@@ -92,7 +92,7 @@ namespace JacRed
 
         public TrackerSettings Toloka = new TrackerSettings("https://toloka.to");
 
-        public TrackerSettings Rutracker = new TrackerSettings("https://rutracker.net");
+        public TrackerSettings Rutracker = new TrackerSettings("https://rutracker.org");
 
         public TrackerSettings Selezen = new TrackerSettings("https://open.selezen.org");
 
