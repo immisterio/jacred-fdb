@@ -77,9 +77,20 @@ namespace JacRed.Engine
                         File.WriteAllText("lastsync.txt", lastsync.ToString());
                     }
                 }
-                catch { }
+                catch
+                {
+                    try
+                    {
+                        if (lastsync > 0)
+                        {
+                            FileDB.SaveChangesToFile();
+                            File.WriteAllText("lastsync.txt", lastsync.ToString());
+                        }
+                    }
+                    catch { }
+                }
 
-                await Task.Delay(TimeSpan.FromMinutes(AppInit.conf.timeSync));
+                await Task.Delay(1000 * 60 * (20 > AppInit.conf.timeSync ? 20 : AppInit.conf.timeSync));
             }
         }
     }
