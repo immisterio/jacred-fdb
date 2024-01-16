@@ -1,8 +1,9 @@
 ﻿using JacRed.Engine.CORE;
+using JacRed.Models.Details;
 using JacRed.Models.Sync;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,43 +29,38 @@ namespace JacRed.Engine
                         if (conf != null && conf.ContainsKey("fbd") && conf.Value<bool>("fbd"))
                         {
                             #region Sync.v2
-                            var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
                             if (root?.collections != null && root.collections.Count > 0)
                             {
+                                var torrents = new List<TorrentBaseDetails>();
+
                                 foreach (var collection in root.collections)
                                 {
-                                    bool updateMasterDb = false;
-
-                                    using (var fdb = FileDB.OpenWrite(collection.Key, empty: true))
+                                    foreach (var torrent in collection.Value.torrents)
                                     {
-                                        foreach (var torrent in collection.Value.torrents)
-                                        {
-                                            if (torrent.Value?.types == null)
-                                                continue;
+                                        if (torrent.Value.types == null)
+                                            continue;
 
-                                            if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(torrent.Value.trackerName))
-                                                continue;
+                                        if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(torrent.Value.trackerName))
+                                            continue;
 
-                                            fdb.Database.TryAdd(torrent.Key, torrent.Value);
-                                            updateMasterDb = true;
-                                        }
+                                        torrents.Add(torrent.Value);
                                     }
-
-                                    if (updateMasterDb)
-                                        FileDB.masterDb.AddOrUpdate(collection.Key, collection.Value.time, (k, t) => collection.Value.time);
                                 }
+
+                                FileDB.AddOrUpdate(torrents);
 
                                 lastsync = root.collections.Last().Value.time.ToFileTimeUtc();
 
                                 if (root.nextread)
-                                    continue;
+                                    goto next;
                             }
                             #endregion
                         }
                         else
                         {
                             #region Sync.v1
-                            var root = await HttpClient.Get<RootObject>($"{AppInit.conf.syncapi}/sync/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+                            next: var root = await HttpClient.Get<RootObject>($"{AppInit.conf.syncapi}/sync/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
                             if (root?.torrents != null && root.torrents.Count > 0)
                             {
                                 FileDB.AddOrUpdate(root.torrents.Select(i => i.value).ToList());
@@ -72,7 +68,7 @@ namespace JacRed.Engine
                                 lastsync = root.torrents.Last().value.updateTime.ToFileTimeUtc();
 
                                 if (root.take == root.torrents.Count)
-                                    continue;
+                                    goto next;
                             }
                             #endregion
                         }

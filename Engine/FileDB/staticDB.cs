@@ -109,7 +109,7 @@ namespace JacRed.Engine
             }
             else
             {
-                var fdb = new FileDB(key, empty);
+                var fdb = new FileDB(key);
                 openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
                 return fdb;
             }

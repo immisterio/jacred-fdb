@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JacRed.Engine;
+using JacRed.Engine.CORE;
 using JacRed.Models.Details;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -21,17 +22,29 @@ namespace JacRed.Controllers
         }
 
         [Route("/sync/fdb/torrents")]
-        public ActionResult FdbTorrents(long time)
+        public ActionResult FdbTorrents(long time, string key = null)
         {
-            if (!AppInit.conf.opensync || time == 0)
+            if (!AppInit.conf.opensync || (time == 0 && key == null))
                 return Json(new List<string>());
 
+            if (!string.IsNullOrEmpty(key))
+            {
+                return Content(JsonConvert.SerializeObject(FileDB.masterDb.Where(i => i.Key.Contains(key)).Take(20).Select(i => new 
+                {
+                    i.Key,
+                    update = i.Value,
+                    lastsync = i.Value.ToFileTimeUtc(),
+                    path = $"Data/fdb/{HashTo.md5(i.Key).Substring(0, 2)}/{HashTo.md5(i.Key).Substring(2)}",
+                    value = FileDB.OpenRead(i.Key)
+                })));
+            }
+
             bool nextread = false;
-            int take = 5_000, countread = 0;
+            int take = 10_000, countread = 0;
             DateTime lastsync = time == -1 ? default : DateTime.FromFileTimeUtc(time);
 
             var torrents = new Dictionary<string, (DateTime, IReadOnlyDictionary<string, TorrentDetails>)>();
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync).ToArray())
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value >= lastsync).ToArray())
             {
                 var torrent = new Dictionary<string, TorrentDetails>();
                 foreach (var t in FileDB.OpenRead(item.Key))
@@ -76,11 +89,11 @@ namespace JacRed.Controllers
             if (!AppInit.conf.opensync || time == 0)
                 return Json(new List<string>());
 
-            int take = 5_000;
+            int take = 10_000;
             DateTime lastsync = time == -1 ? default : DateTime.FromFileTimeUtc(time);
 
             var torrents = new Dictionary<string, TorrentDetails>();
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync).ToArray())
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value >= lastsync).ToArray())
             {
                 foreach (var torrent in FileDB.OpenRead(item.Key))
                 {

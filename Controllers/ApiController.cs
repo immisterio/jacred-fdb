@@ -87,6 +87,9 @@ namespace JacRed.Controllers
             #region AddTorrents
             void AddTorrents(TorrentDetails t)
             {
+                if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(t.trackerName))
+                    return;
+
                 if (torrents.TryGetValue(t.url, out TorrentDetails val))
                 {
                     if (t.updateTime > val.updateTime)
@@ -598,6 +601,9 @@ namespace JacRed.Controllers
             #region AddTorrents
             void AddTorrents(TorrentDetails t)
             {
+                if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(t.trackerName))
+                    return;
+
                 if (torrents.TryGetValue(t.url, out TorrentDetails val))
                 {
                     if (t.updateTime > val.updateTime)
