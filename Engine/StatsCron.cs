@@ -15,6 +15,11 @@ namespace JacRed.Engine
 
             while (true)
             {
+                if (AppInit.conf.timeStatsUpdate == -1)
+                    continue;
+
+                await Task.Delay(TimeSpan.FromMinutes(AppInit.conf.timeStatsUpdate));
+
                 try
                 {
                     var today = DateTime.Today - (DateTime.Now - DateTime.UtcNow);
@@ -81,8 +86,6 @@ namespace JacRed.Engine
                     }), Formatting.Indented));
                 }
                 catch { }
-
-                await Task.Delay(TimeSpan.FromMinutes(AppInit.conf.timeStatsUpdate));
             }
         }
     }

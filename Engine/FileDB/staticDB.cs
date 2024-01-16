@@ -100,7 +100,7 @@ namespace JacRed.Engine
             return new FileDB(key).Database;
         }
 
-        public static FileDB OpenWrite(string key)
+        public static FileDB OpenWrite(string key, bool empty = false)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
             {
@@ -109,7 +109,7 @@ namespace JacRed.Engine
             }
             else
             {
-                var fdb = new FileDB(key);
+                var fdb = new FileDB(key, empty);
                 openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
                 return fdb;
             }

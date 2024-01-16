@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using JacRed.Engine.CORE;
 using JacRed.Models;
 using JacRed.Models.Details;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Newtonsoft.Json;
 
 namespace JacRed.Engine
@@ -18,12 +19,15 @@ namespace JacRed.Engine
 
         public bool savechanges = false;
 
-        FileDB(string key)
+        FileDB(string key, bool empty = false)
         {
             fdbkey = key;
             string fdbpath = pathDb(key);
 
-            if (File.Exists(fdbpath))
+            if (empty)
+                savechanges = true;
+
+            if (!empty && File.Exists(fdbpath))
                 Database = JsonStream.Read<Dictionary<string, TorrentDetails>>(fdbpath) ?? new Dictionary<string, TorrentDetails>();
         }
 
