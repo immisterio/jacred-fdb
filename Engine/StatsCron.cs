@@ -16,7 +16,10 @@ namespace JacRed.Engine
             while (true)
             {
                 if (AppInit.conf.timeStatsUpdate == -1)
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1));
                     continue;
+                }
 
                 await Task.Delay(TimeSpan.FromMinutes(AppInit.conf.timeStatsUpdate));
 

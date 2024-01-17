@@ -1,5 +1,4 @@
 ﻿using JacRed.Models.Details;
-using MonoTorrent;
 using System;
 using System.Collections.Generic;
 using System.Linq;

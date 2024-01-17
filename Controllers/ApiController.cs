@@ -256,7 +256,7 @@ namespace JacRed.Controllers
                 #region torrentsSearch
                 void torrentsSearch(bool exact)
                 {
-                    var mdb = FileDB.masterDb.OrderByDescending(i => i.Value).Where(i => i.Key.Contains(_s));
+                    var mdb = FileDB.masterDb.Where(i => i.Key.Contains(_s));
                     if (!AppInit.conf.evercache)
                         mdb = mdb.Take(AppInit.conf.maxreadfile);
 
@@ -648,7 +648,7 @@ namespace JacRed.Controllers
             else
             {
                 #region Поиск по совпадению ключа в имени
-                var mdb = FileDB.masterDb.OrderByDescending(i => i.Value).Where(i => i.Key.Contains(_s) || (_altsearch != null && i.Key.Contains(_altsearch)));
+                var mdb = FileDB.masterDb.Where(i => i.Key.Contains(_s) || (_altsearch != null && i.Key.Contains(_altsearch)));
                 if (!AppInit.conf.evercache)
                     mdb = mdb.Take(AppInit.conf.maxreadfile);
 

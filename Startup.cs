@@ -59,8 +59,10 @@ namespace JacRed
 
             app.UseRouting();
             app.UseResponseCompression();
-            app.UseStaticFiles();
             app.UseModHeaders();
+
+            if (AppInit.conf.web)
+                app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {

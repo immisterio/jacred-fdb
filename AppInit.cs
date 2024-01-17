@@ -49,7 +49,11 @@ namespace JacRed
 
         public bool opensync = true;
 
+        public bool opensync_v1 = false;
+
         public bool tracks = false;
+
+        public bool web = true;
 
         /// <summary>
         /// 0 - все
