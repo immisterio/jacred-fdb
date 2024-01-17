@@ -45,7 +45,7 @@ namespace JacRed.Controllers
             }
             #endregion
 
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).ToArray())
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value.fileTime).ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
                 {
@@ -53,7 +53,7 @@ namespace JacRed.Controllers
                     {
                         torrent.Value.size = getSizeInfo(torrent.Value.sizeName);
                         torrent.Value.updateTime = DateTime.UtcNow;
-                        FileDB.masterDb[item.Key] = torrent.Value.updateTime;
+                        FileDB.masterDb[item.Key] = new Models.TorrentInfo() { updateTime = torrent.Value.updateTime, fileTime  = torrent.Value.updateTime.ToFileTimeUtc() };
                     }
 
                     fdb.savechanges = true;
@@ -101,7 +101,7 @@ namespace JacRed.Controllers
                         torrent.Value.languages = null;
 
                         torrent.Value.updateTime = DateTime.UtcNow;
-                        FileDB.masterDb[item.Key] = torrent.Value.updateTime;
+                        FileDB.masterDb[item.Key] = new Models.TorrentInfo() { updateTime = torrent.Value.updateTime, fileTime = torrent.Value.updateTime.ToFileTimeUtc() };
                     }
 
                     fdb.savechanges = true;

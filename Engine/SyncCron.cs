@@ -30,7 +30,14 @@ namespace JacRed.Engine
                         {
                             #region Sync.v2
                             next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
-                            if (root?.collections != null && root.collections.Count > 0)
+
+                            if (root?.collections == null)
+                            {
+                                await Task.Delay(TimeSpan.FromMinutes(1));
+                                goto next;
+                            }
+
+                            if (root.collections.Count > 0)
                             {
                                 var torrents = new List<TorrentBaseDetails>();
 
@@ -50,7 +57,7 @@ namespace JacRed.Engine
 
                                 FileDB.AddOrUpdate(torrents);
 
-                                lastsync = root.collections.Last().Value.time.ToFileTimeUtc();
+                                lastsync = root.collections.Last().Value.fileTime;
 
                                 if (root.nextread)
                                     goto next;

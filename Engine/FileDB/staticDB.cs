@@ -16,25 +16,49 @@ namespace JacRed.Engine
         /// $"{search_name}:{search_originalname}"
         /// Верхнее время изменения 
         /// </summary>
-        public static ConcurrentDictionary<string, DateTime> masterDb = new ConcurrentDictionary<string, DateTime>();
+        public static ConcurrentDictionary<string, TorrentInfo> masterDb = new ConcurrentDictionary<string, TorrentInfo>();
 
         static ConcurrentDictionary<string, WriteTaskModel> openWriteTask = new ConcurrentDictionary<string, WriteTaskModel>();
 
         static FileDB()
         {
             if (File.Exists("Data/masterDb.bz"))
-                masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>("Data/masterDb.bz");
+                masterDb = JsonStream.Read<ConcurrentDictionary<string, TorrentInfo>>("Data/masterDb.bz");
 
             if (masterDb == null)
             {
                 if (File.Exists($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz"))
-                    masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz");
+                    masterDb = JsonStream.Read<ConcurrentDictionary<string, TorrentInfo>>($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz");
 
                 if (masterDb == null && File.Exists($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz"))
-                    masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz");
+                    masterDb = JsonStream.Read<ConcurrentDictionary<string, TorrentInfo>>($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz");
 
                 if (masterDb == null)
-                    masterDb = new ConcurrentDictionary<string, DateTime>();
+                    masterDb = new ConcurrentDictionary<string, TorrentInfo>();
+
+                #region переход с 29.08.2023
+                if (File.Exists("Data/masterDb.bz"))
+                {
+                    try
+                    {
+                        foreach (var item in JsonStream.Read<Dictionary<string, DateTime>>("Data/masterDb.bz"))
+                        {
+                            masterDb.TryAdd(item.Key, new TorrentInfo
+                            {
+                                updateTime = item.Value,
+                                fileTime = item.Value.ToFileTimeUtc()
+                            });
+                        }
+
+                        if (masterDb.Count > 0)
+                        {
+                            JsonStream.Write("Data/masterDb.bz", masterDb);
+                            return;
+                        }
+                    }
+                    catch { }
+                }
+                #endregion
 
                 if (File.Exists("lastsync.txt"))
                     File.Delete("lastsync.txt");
@@ -71,15 +95,16 @@ namespace JacRed.Engine
         static void AddOrUpdateMasterDb(TorrentDetails torrent)
         {
             string key = keyDb(torrent.name, torrent.originalname);
+            var md = new TorrentInfo() { updateTime = torrent.updateTime, fileTime = torrent.updateTime.ToFileTimeUtc() };
 
-            if (masterDb.TryGetValue(key, out DateTime updateTime))
+            if (masterDb.TryGetValue(key, out TorrentInfo info))
             {
-                if (torrent.updateTime > updateTime)
-                    masterDb[key] = torrent.updateTime;
+                if (torrent.updateTime > info.updateTime)
+                    masterDb[key] = md;
             }
             else
             {
-                masterDb.TryAdd(key, torrent.updateTime);
+                masterDb.TryAdd(key, md);
             }
         }
         #endregion
@@ -100,7 +125,7 @@ namespace JacRed.Engine
             return new FileDB(key).Database;
         }
 
-        public static FileDB OpenWrite(string key, bool empty = false)
+        public static FileDB OpenWrite(string key)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
             {
