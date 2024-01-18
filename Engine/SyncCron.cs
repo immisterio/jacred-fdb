@@ -12,16 +12,20 @@ namespace JacRed.Engine
 {
     public static class SyncCron
     {
-        static long lastsync = -1;
+        static long lastsync = -1, starsync = -1;
 
         async public static Task Run()
         {
+            await Task.Delay(20_000);
+
             while (true)
             {
                 try
                 {
                     if (!string.IsNullOrWhiteSpace(AppInit.conf.syncapi))
                     {
+                        Console.WriteLine($"\n\nsync: start / {DateTime.Now}");
+
                         if (lastsync == -1 && File.Exists("lastsync.txt"))
                             lastsync = long.Parse(File.ReadAllText("lastsync.txt"));
 
@@ -29,11 +33,16 @@ namespace JacRed.Engine
                         if (conf != null && conf.ContainsKey("fbd") && conf.Value<bool>("fbd"))
                         {
                             #region Sync.v2
+                            if (starsync == -1 && File.Exists("starsync.txt"))
+                                starsync = long.Parse(File.ReadAllText("starsync.txt"));
+
                             bool reset = true;
                             DateTime lastSave = DateTime.Now;
 
-                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
-                            
+                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}&start={starsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+
+                            Console.WriteLine($"sync: time={lastsync}&start={starsync}");
+
                             if (root?.collections == null)
                             {
                                 if (reset)
@@ -71,7 +80,7 @@ namespace JacRed.Engine
 
                                 if (root.nextread)
                                 {
-                                    if (DateTime.Now > lastSave.AddMinutes(2))
+                                    if (DateTime.Now > lastSave.AddMinutes(5))
                                     {
                                         lastSave = DateTime.Now;
                                         FileDB.SaveChangesToFile();
@@ -80,6 +89,14 @@ namespace JacRed.Engine
 
                                     goto next;
                                 }
+
+                                starsync = lastsync;
+                                File.WriteAllText("starsync.txt", starsync.ToString());
+                            }
+                            else if (root.collections.Count == 0)
+                            {
+                                starsync = lastsync;
+                                File.WriteAllText("starsync.txt", starsync.ToString());
                             }
                             #endregion
                         }
@@ -121,6 +138,7 @@ namespace JacRed.Engine
                     catch { }
                 }
 
+                Console.WriteLine("sync: end");
                 await Task.Delay(1000 * Random.Shared.Next(60, 300));
                 await Task.Delay(1000 * 60 * (20 > AppInit.conf.timeSync ? 20 : AppInit.conf.timeSync));
             }

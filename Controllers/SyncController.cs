@@ -41,7 +41,7 @@ namespace JacRed.Controllers
         }
 
         [Route("/sync/fdb/torrents")]
-        public ActionResult FdbTorrents(long time)
+        public ActionResult FdbTorrents(long time, long start = -1)
         {
             if (!AppInit.conf.opensync || time == 0)
                 return Json(new { nextread = false, collections = new List<Collection>() });
@@ -62,6 +62,9 @@ namespace JacRed.Controllers
 
                 foreach (var t in FileDB.OpenRead(item.Key))
                 {
+                    if (start != -1 && start > t.Value.updateTime.ToFileTimeUtc())
+                        continue;
+
                     if (t.Value.ffprobe == null || t.Value.languages == null)
                     {
                         var _t = (TorrentDetails)t.Value.Clone();

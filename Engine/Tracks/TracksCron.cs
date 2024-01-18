@@ -16,6 +16,8 @@ namespace JacRed.Engine
         /// </param>
         async public static Task Run(int typetask)
         {
+            await Task.Delay(20_000);
+
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(typetask == 1 ? 60 : 180));
