@@ -72,6 +72,8 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
+        public bool syncsport = true;
+
         public int maxreadfile = 200;
 
         public Evercache evercache = new Evercache() { enable = true, validHour = 2 };

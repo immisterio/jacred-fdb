@@ -58,6 +58,9 @@ namespace JacRed.Engine
                                         if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(torrent.Value.trackerName))
                                             continue;
 
+                                        if (!AppInit.conf.syncsport && torrent.Value.types.Contains("sport"))
+                                            continue;
+
                                         torrents.Add(torrent.Value);
                                     }
                                 }
