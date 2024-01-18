@@ -110,19 +110,28 @@ namespace JacRed.Engine
         #endregion
 
         #region OpenRead / OpenWrite
-        public static IReadOnlyDictionary<string, TorrentDetails> OpenRead(string key)
+        public static IReadOnlyDictionary<string, TorrentDetails> OpenRead(string key, bool update_lastread = false)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
-                return val.db.Database;
-
-            if (AppInit.conf.evercache)
             {
-                var fdb = new FileDB(key);
-                openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
-                return fdb.Database;
+                if (update_lastread)
+                    val.lastread = DateTime.UtcNow;
+
+                return val.db.Database;
             }
 
-            return new FileDB(key).Database;
+            var fdb = new FileDB(key);
+
+            if (AppInit.conf.evercache.enable)
+            {
+                var wtm = new WriteTaskModel() { db = fdb, openconnection = 1 };
+                if (update_lastread)
+                    wtm.lastread = DateTime.UtcNow;
+
+                openWriteTask.TryAdd(key, wtm);
+            }
+
+            return fdb.Database;
         }
 
         public static FileDB OpenWrite(string key)
@@ -193,6 +202,30 @@ namespace JacRed.Engine
                     File.Delete($"Data/masterDb_{DateTime.Today.AddDays(-3):dd-MM-yyyy}.bz");
             }
             catch { }
+        }
+        #endregion
+
+
+        #region Cron
+        async public static Task Cron()
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(10));
+
+                if (!AppInit.conf.evercache.enable || 0 >= AppInit.conf.evercache.validHour)
+                    continue;
+
+                try
+                {
+                    foreach (var i in openWriteTask)
+                    {
+                        if (DateTime.UtcNow > i.Value.lastread.AddHours(AppInit.conf.evercache.validHour))
+                            openWriteTask.TryRemove(i.Key, out _);
+                    }
+                }
+                catch { }
+            }
         }
         #endregion
     }

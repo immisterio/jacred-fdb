@@ -116,12 +116,12 @@ namespace JacRed.Controllers
 
                 // Быстрая выборка по совпадению ключа в имени
                 var mdb = FileDB.masterDb.Where(i => (_n != null && i.Key.StartsWith($"{_n}:")) || (_o != null && i.Key.EndsWith($":{_o}")));
-                if (!AppInit.conf.evercache)
+                if (!AppInit.conf.evercache.enable)
                     mdb = mdb.Take(AppInit.conf.maxreadfile);
 
                 foreach (var val in mdb)
                 {
-                    foreach (var t in FileDB.OpenRead(val.Key).Values)
+                    foreach (var t in FileDB.OpenRead(val.Key, true).Values)
                     {
                         if (t.types == null || t.title.Contains(" КПК"))
                             continue;
@@ -257,12 +257,12 @@ namespace JacRed.Controllers
                 void torrentsSearch(bool exact)
                 {
                     var mdb = FileDB.masterDb.Where(i => i.Key.Contains(_s));
-                    if (!AppInit.conf.evercache)
+                    if (!AppInit.conf.evercache.enable)
                         mdb = mdb.Take(AppInit.conf.maxreadfile);
 
                     foreach (var val in mdb)
                     {
-                        foreach (var t in FileDB.OpenRead(val.Key).Values)
+                        foreach (var t in FileDB.OpenRead(val.Key, true).Values)
                         {
                             if (exact)
                             {
@@ -554,7 +554,7 @@ namespace JacRed.Controllers
 
             }, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
-            if (setcache && !AppInit.conf.evercache)
+            if (setcache && !AppInit.conf.evercache.enable)
                 memoryCache.Set(memoryKey, jval, DateTime.Now.AddMinutes(10));
 
             return Content(jval, "application/json; charset=utf-8");
@@ -627,7 +627,7 @@ namespace JacRed.Controllers
                 #region Точный поиск
                 foreach (var mdb in FileDB.masterDb.Where(i => i.Key.StartsWith($"{_s}:") || i.Key.EndsWith($":{_s}") || (_altsearch != null && i.Key.Contains(_altsearch))))
                 {
-                    foreach (var t in FileDB.OpenRead(mdb.Key).Values)
+                    foreach (var t in FileDB.OpenRead(mdb.Key, true).Values)
                     {
                         if (t.types == null)
                             continue;
@@ -649,12 +649,12 @@ namespace JacRed.Controllers
             {
                 #region Поиск по совпадению ключа в имени
                 var mdb = FileDB.masterDb.Where(i => i.Key.Contains(_s) || (_altsearch != null && i.Key.Contains(_altsearch)));
-                if (!AppInit.conf.evercache)
+                if (!AppInit.conf.evercache.enable)
                     mdb = mdb.Take(AppInit.conf.maxreadfile);
 
                 foreach (var val in mdb)
                 {
-                    foreach (var t in FileDB.OpenRead(val.Key).Values)
+                    foreach (var t in FileDB.OpenRead(val.Key, true).Values)
                     {
                         if (t.types == null)
                             continue;

@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using JacRed.Engine.CORE;
 using JacRed.Models;
 using JacRed.Models.Details;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Newtonsoft.Json;
 
 namespace JacRed.Engine
@@ -178,8 +177,16 @@ namespace JacRed.Engine
             if (openWriteTask.TryGetValue(fdbkey, out WriteTaskModel val))
             {
                 val.openconnection -= 1;
-                if (val.openconnection <= 0 && !AppInit.conf.evercache)
-                    openWriteTask.TryRemove(fdbkey, out _);
+                if (val.openconnection <= 0)
+                {
+                    if (!AppInit.conf.evercache.enable)
+                        openWriteTask.TryRemove(fdbkey, out _);
+                    else if (AppInit.conf.evercache.enable && AppInit.conf.evercache.validHour > 0)
+                    {
+                        if (DateTime.UtcNow > val.lastread.AddHours(AppInit.conf.evercache.validHour))
+                            openWriteTask.TryRemove(fdbkey, out _);
+                    }
+                }
             }
         }
         #endregion

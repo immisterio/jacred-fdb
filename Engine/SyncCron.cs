@@ -29,16 +29,23 @@ namespace JacRed.Engine
                         if (conf != null && conf.ContainsKey("fbd") && conf.Value<bool>("fbd"))
                         {
                             #region Sync.v2
-                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+                            bool reset = true;
+                            DateTime lastSave = DateTime.Now;
 
+                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+                            
                             if (root?.collections == null)
                             {
-                                await Task.Delay(TimeSpan.FromMinutes(1));
-                                goto next;
+                                if (reset)
+                                {
+                                    reset = false;
+                                    await Task.Delay(TimeSpan.FromMinutes(1));
+                                    goto next;
+                                }
                             }
-
-                            if (root.collections.Count > 0)
+                            else if (root.collections.Count > 0)
                             {
+                                reset = true;
                                 var torrents = new List<TorrentBaseDetails>();
 
                                 foreach (var collection in root.collections)
@@ -60,7 +67,16 @@ namespace JacRed.Engine
                                 lastsync = root.collections.Last().Value.fileTime;
 
                                 if (root.nextread)
+                                {
+                                    if (DateTime.Now > lastSave.AddMinutes(2))
+                                    {
+                                        lastSave = DateTime.Now;
+                                        FileDB.SaveChangesToFile();
+                                        File.WriteAllText("lastsync.txt", lastsync.ToString());
+                                    }
+
                                     goto next;
+                                }
                             }
                             #endregion
                         }
@@ -102,6 +118,7 @@ namespace JacRed.Engine
                     catch { }
                 }
 
+                await Task.Delay(1000 * Random.Shared.Next(60, 300));
                 await Task.Delay(1000 * 60 * (20 > AppInit.conf.timeSync ? 20 : AppInit.conf.timeSync));
             }
         }

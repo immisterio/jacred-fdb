@@ -47,7 +47,7 @@ namespace JacRed.Controllers
                 return Json(new { nextread = false, collections = new List<Collection>() });
 
             bool nextread = false;
-            int take = 7_000, countread = 0;
+            int take = 2_000, countread = 0;
             var collections = new List<Collection>(take);
 
             if (!memoryCache.TryGetValue("sync:masterDb", out Dictionary<string, TorrentInfo> masterDb))
@@ -111,7 +111,7 @@ namespace JacRed.Controllers
             if (!AppInit.conf.opensync_v1 || time == 0)
                 return Json(new List<string>());
 
-            int take = 10_000;
+            int take = 2_000;
             var torrents = new Dictionary<string, TorrentDetails>();
 
             if (!memoryCache.TryGetValue("sync:masterDb", out Dictionary<string, TorrentInfo> masterDb))

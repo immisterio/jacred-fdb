@@ -26,8 +26,8 @@ Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka 
 
 При включении evercache, нужно убрать в JacRed.runtimeconfig.json лимит потребления памяти 
 ```
-"System.GC.HeapCount": 30,
-"System.GC.HeapHardLimit": 309715200, // ~300mb
+"System.GC.HeapCount": 40,
+"System.GC.HeapHardLimit": 600000000, // ~600mb
 ```
 
 # Настройка init.conf
