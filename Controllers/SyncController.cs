@@ -20,7 +20,7 @@ namespace JacRed.Controllers
             return Json(new 
             {
                 fbd = true,
-                version = 2
+                version = 3
             });
         }
 
@@ -40,11 +40,15 @@ namespace JacRed.Controllers
             })), "application/json; charset=utf-8");
         }
 
+        [Route("/sync/3/torrents")]
         [Route("/sync/fdb/torrents")]
         public ActionResult FdbTorrents(long time)
         {
             if (!AppInit.conf.opensync || time == 0)
                 return Json(new { nextread = false, collections = new List<Collection>() });
+
+            bool isv3 = HttpContext.Request.Path.Value.Contains("/3/");
+            DateTime lastsync = time == -1 ? default : DateTime.FromFileTimeUtc(time);
 
             bool nextread = false;
             int take = 2_000, countread = 0;
@@ -62,6 +66,9 @@ namespace JacRed.Controllers
 
                 foreach (var t in FileDB.OpenRead(item.Key))
                 {
+                    if (isv3 && lastsync > t.Value.updateTime)
+                        continue;
+
                     if (t.Value.ffprobe == null || t.Value.languages == null)
                     {
                         var _t = (TorrentDetails)t.Value.Clone();
@@ -81,18 +88,21 @@ namespace JacRed.Controllers
                     }
                 }
 
-                countread = countread + torrent.Count;
-
-                collections.Add(new Collection() 
+                if (torrent.Count > 0)
                 {
-                    Key = item.Key,
-                    Value = new Value() 
+                    countread = countread + torrent.Count;
+
+                    collections.Add(new Collection()
                     {
-                        time = item.Value.updateTime,
-                        fileTime = item.Value.fileTime,
-                        torrents = torrent
-                    }
-                });
+                        Key = item.Key,
+                        Value = new Value()
+                        {
+                            time = item.Value.updateTime,
+                            fileTime = item.Value.fileTime,
+                            torrents = torrent
+                        }
+                    });
+                }
 
                 if (countread > take)
                 {
@@ -113,6 +123,7 @@ namespace JacRed.Controllers
 
             int take = 2_000;
             var torrents = new Dictionary<string, TorrentDetails>();
+            DateTime lastsync = time == -1 ? default : DateTime.FromFileTimeUtc(time);
 
             if (!memoryCache.TryGetValue("sync:masterDb", out Dictionary<string, TorrentInfo> masterDb))
             {
@@ -124,6 +135,9 @@ namespace JacRed.Controllers
             {
                 foreach (var torrent in FileDB.OpenRead(item.Key))
                 {
+                    if (lastsync > torrent.Value.updateTime)
+                        continue;
+
                     var _t = (TorrentDetails)torrent.Value.Clone();
 
                     var streams = TracksDB.Get(_t.magnet, _t.types);

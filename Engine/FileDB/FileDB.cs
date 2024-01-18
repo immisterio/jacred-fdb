@@ -37,10 +37,12 @@ namespace JacRed.Engine
             {
                 bool updateFull = false;
 
-                void upt(bool uptfull = false) 
+                void upt(bool uptfull = false, bool updatetime = true) 
                 {
                     savechanges = true;
-                    t.updateTime = DateTime.UtcNow;
+
+                    if (updatetime)
+                        t.updateTime = DateTime.UtcNow;
 
                     if (uptfull)
                         updateFull = true;
@@ -89,13 +91,13 @@ namespace JacRed.Engine
                 if (torrent.sid != t.sid)
                 {
                     t.sid = torrent.sid;
-                    upt();
+                    upt(updatetime: false);
                 }
 
                 if (torrent.pir != t.pir)
                 {
                     t.pir = torrent.pir;
-                    upt();
+                    upt(updatetime: false);
                 }
 
                 if (!string.IsNullOrWhiteSpace(torrent.sizeName) && torrent.sizeName != t.sizeName)

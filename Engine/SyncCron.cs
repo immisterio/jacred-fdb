@@ -28,11 +28,12 @@ namespace JacRed.Engine
                         var conf = await HttpClient.Get<JObject>($"{AppInit.conf.syncapi}/sync/conf");
                         if (conf != null && conf.ContainsKey("fbd") && conf.Value<bool>("fbd"))
                         {
-                            #region Sync.v2
+                            #region Sync.v2/3
                             bool reset = true;
+                            bool isv3 = conf.Value<int>("version") == 3;
                             DateTime lastSave = DateTime.Now;
 
-                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/{(isv3 ? "3" : "fdb")}/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
                             
                             if (root?.collections == null)
                             {
