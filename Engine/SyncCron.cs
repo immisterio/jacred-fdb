@@ -14,7 +14,8 @@ namespace JacRed.Engine
     {
         static long lastsync = -1, starsync = -1;
 
-        async public static Task Run()
+        #region Torrents
+        async public static Task Torrents()
         {
             await Task.Delay(20_000);
 
@@ -55,19 +56,16 @@ namespace JacRed.Engine
                             else if (root.collections.Count > 0)
                             {
                                 reset = true;
-                                var torrents = new List<TorrentBaseDetails>();
+                                var torrents = new List<TorrentBaseDetails>(root.countread);
 
                                 foreach (var collection in root.collections)
                                 {
                                     foreach (var torrent in collection.Value.torrents)
                                     {
-                                        if (torrent.Value.types == null)
+                                        if (AppInit.conf.synctrackers != null && torrent.Value.trackerName != null && !AppInit.conf.synctrackers.Contains(torrent.Value.trackerName))
                                             continue;
 
-                                        if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(torrent.Value.trackerName))
-                                            continue;
-
-                                        if (!AppInit.conf.syncsport && torrent.Value.types.Contains("sport"))
+                                        if (!AppInit.conf.syncsport && torrent.Value.types != null && torrent.Value.types.Contains("sport"))
                                             continue;
 
                                         torrents.Add(torrent.Value);
@@ -118,6 +116,8 @@ namespace JacRed.Engine
 
                         FileDB.SaveChangesToFile();
                         File.WriteAllText("lastsync.txt", lastsync.ToString());
+
+                        Console.WriteLine("sync: end");
                     }
                     else
                     {
@@ -125,7 +125,7 @@ namespace JacRed.Engine
                         continue;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     try
                     {
@@ -136,12 +136,62 @@ namespace JacRed.Engine
                         }
                     }
                     catch { }
+
+                    Console.WriteLine("sync: error / " + ex.Message);
                 }
 
-                Console.WriteLine("sync: end");
                 await Task.Delay(1000 * Random.Shared.Next(60, 300));
                 await Task.Delay(1000 * 60 * (20 > AppInit.conf.timeSync ? 20 : AppInit.conf.timeSync));
             }
         }
+        #endregion
+
+        #region Spidr
+        async public static Task Spidr()
+        {
+            while (true)
+            {
+                await Task.Delay(1000 * Random.Shared.Next(60, 300));
+                await Task.Delay(1000 * 60 * 120);
+
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(AppInit.conf.syncapi) && AppInit.conf.syncspidr)
+                    {
+                        long lastsync_spidr = -1;
+
+                        var conf = await HttpClient.Get<JObject>($"{AppInit.conf.syncapi}/sync/conf");
+                        if (conf != null && conf.ContainsKey("spidr") && conf.Value<bool>("spidr"))
+                        {
+                            Console.WriteLine($"\n\nsync_spidr: start / {DateTime.Now}");
+
+                            next: var root = await HttpClient.Get<Models.Sync.v2.RootObject>($"{AppInit.conf.syncapi}/sync/fdb/torrents?time={lastsync_spidr}&spidr=true", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+
+                            Console.WriteLine($"sync_spidr: time={lastsync_spidr}");
+
+                            if (root?.collections != null && root.collections.Count > 0)
+                            {
+                                foreach (var collection in root.collections)
+                                    FileDB.AddOrUpdate(collection.Value.torrents.Values);
+
+                                lastsync_spidr = root.collections.Last().Value.fileTime;
+
+                                if (root.nextread)
+                                    goto next;
+                            }
+
+                            Console.WriteLine("sync_spidr: end");
+                        }
+                    }
+                    else
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(1));
+                        continue;
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine("sync_spidr: error / " + ex.Message); }
+            }
+        }
+        #endregion
     }
 }

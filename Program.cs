@@ -12,7 +12,9 @@ namespace JacRed
     {
         public static void Main(string[] args)
         {
-            ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Run());
+            ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Torrents());
+            ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Spidr());
+
             ThreadPool.QueueUserWorkItem(async _ => await StatsCron.Run());
 
             ThreadPool.QueueUserWorkItem(async _ => await FileDB.Cron());

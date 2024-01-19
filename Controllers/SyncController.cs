@@ -20,6 +20,7 @@ namespace JacRed.Controllers
             return Json(new 
             {
                 fbd = true,
+                spidr = true,
                 version = 2
             });
         }
@@ -41,7 +42,7 @@ namespace JacRed.Controllers
         }
 
         [Route("/sync/fdb/torrents")]
-        public ActionResult FdbTorrents(long time, long start = -1)
+        public ActionResult FdbTorrents(long time, long start = -1, bool spidr = false)
         {
             if (!AppInit.conf.opensync || time == 0)
                 return Json(new { nextread = false, collections = new List<Collection>() });
@@ -62,7 +63,7 @@ namespace JacRed.Controllers
 
                 foreach (var t in FileDB.OpenRead(item.Key))
                 {
-                    if (start != -1 && start > t.Value.updateTime.ToFileTimeUtc())
+                    if (spidr || (start != -1 && start > t.Value.updateTime.ToFileTimeUtc()))
                     {
                         torrent.TryAdd(t.Key, new TorrentDetails() 
                         {
@@ -115,7 +116,7 @@ namespace JacRed.Controllers
                 }
             }
 
-            return Json(new { nextread, collections });
+            return Json(new { nextread, countread, take, collections });
         }
 
 
