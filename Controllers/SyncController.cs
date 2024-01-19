@@ -63,7 +63,15 @@ namespace JacRed.Controllers
                 foreach (var t in FileDB.OpenRead(item.Key))
                 {
                     if (start != -1 && start > t.Value.updateTime.ToFileTimeUtc())
+                    {
+                        torrent.TryAdd(t.Key, new TorrentDetails() 
+                        {
+                            sid = t.Value.sid,
+                            pir = t.Value.pir,
+                            url = t.Value.url
+                        });
                         continue;
+                    }
 
                     if (t.Value.ffprobe == null || t.Value.languages == null)
                     {
