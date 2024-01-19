@@ -14,7 +14,9 @@ namespace JacRed
         {
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Run());
             ThreadPool.QueueUserWorkItem(async _ => await StatsCron.Run());
+
             ThreadPool.QueueUserWorkItem(async _ => await FileDB.Cron());
+            ThreadPool.QueueUserWorkItem(async _ => await FileDB.CronFast());
 
             ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(1));
             ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(2));

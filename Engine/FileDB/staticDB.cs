@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JacRed.Engine.CORE;
 using JacRed.Models;
 using JacRed.Models.Details;
+using System.Linq;
 
 namespace JacRed.Engine
 {
@@ -115,7 +116,10 @@ namespace JacRed.Engine
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
             {
                 if (update_lastread)
+                {
+                    val.countread++;
                     val.lastread = DateTime.UtcNow;
+                }
 
                 return val.db.Database;
             }
@@ -126,7 +130,10 @@ namespace JacRed.Engine
             {
                 var wtm = new WriteTaskModel() { db = fdb, openconnection = 1 };
                 if (update_lastread)
+                {
+                    wtm.countread++;
                     wtm.lastread = DateTime.UtcNow;
+                }
 
                 openWriteTask.TryAdd(key, wtm);
             }
@@ -221,6 +228,27 @@ namespace JacRed.Engine
                     foreach (var i in openWriteTask)
                     {
                         if (DateTime.UtcNow > i.Value.lastread.AddHours(AppInit.conf.evercache.validHour))
+                            openWriteTask.TryRemove(i.Key, out _);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        async public static Task CronFast()
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(20));
+
+                if (!AppInit.conf.evercache.enable || 0 >= AppInit.conf.evercache.validHour)
+                    continue;
+
+                try
+                {
+                    if (openWriteTask.Count > AppInit.conf.evercache.maxOpenWriteTask)
+                    {
+                        foreach (var i in openWriteTask.OrderBy(i => i.Value.countread).Take(100))
                             openWriteTask.TryRemove(i.Key, out _);
                     }
                 }

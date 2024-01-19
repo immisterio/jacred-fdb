@@ -5,5 +5,7 @@
         public bool enable { get; set; }
 
         public int validHour { get; set; }
+
+        public int maxOpenWriteTask { get; set; }
     }
 }
