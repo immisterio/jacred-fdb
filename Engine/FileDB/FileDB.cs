@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -109,12 +110,14 @@ namespace JacRed.Engine
                 if (!string.IsNullOrWhiteSpace(torrent.name) && torrent.name != t.name)
                 {
                     t.name = torrent.name;
+                    t._sn = StringConvert.SearchName(t.name);
                     upt();
                 }
 
                 if (!string.IsNullOrWhiteSpace(torrent.originalname) && torrent.originalname != t.originalname)
                 {
                     t.originalname = torrent.originalname;
+                    t._so = StringConvert.SearchName(t.originalname);
                     upt();
                 }
 

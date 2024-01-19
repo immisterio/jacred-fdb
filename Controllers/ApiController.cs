@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using JacRed.Engine.CORE;
 using System.Text.RegularExpressions;
 using JacRed.Engine;
@@ -13,6 +12,7 @@ using System.Web;
 using MonoTorrent;
 using JacRed.Models.Details;
 using JacRed.Models.Tracks;
+using JacRed.Models.Api;
 
 namespace JacRed.Controllers
 {
@@ -37,7 +37,8 @@ namespace JacRed.Controllers
         [Route("/api/v2.0/indexers/{status}/results")]
         public ActionResult Jackett(string apikey, string query, string title, string title_original, int year, Dictionary<string, string> category, int is_serial = -1)
         {
-            bool rqnum = false, setcache = false;
+            bool rqnum = false;
+            var fastdb = getFastdb();
             var torrents = new Dictionary<string, TorrentDetails>();
 
             #region Запрос с NUM
@@ -102,32 +103,38 @@ namespace JacRed.Controllers
             }
             #endregion
 
-            string memoryKey = $"{AppInit.conf.mergeduplicates}:{rqnum}:{title}:{title_original}:{year}:{is_serial}";
-            if (memoryCache.TryGetValue(memoryKey, out string jval))
-                return Content(jval, "application/json; charset=utf-8");
-
             if (!string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(title_original))
             {
                 #region Точный поиск
-                setcache = true;
-
                 string _n = StringConvert.SearchName(title);
                 string _o = StringConvert.SearchName(title_original);
 
-                // Быстрая выборка по совпадению ключа в имени
-                var mdb = FileDB.masterDb.Where(i => (_n != null && i.Key.StartsWith($"{_n}:")) || (_o != null && i.Key.EndsWith($":{_o}")));
-                if (!AppInit.conf.evercache.enable)
-                    mdb = mdb.Take(AppInit.conf.maxreadfile);
+                HashSet<string> keys = new HashSet<string>(20);
 
-                foreach (var val in mdb)
+                void updateKeys(string k)
                 {
-                    foreach (var t in FileDB.OpenRead(val.Key, true).Values)
+                    if (k != null && fastdb.TryGetValue(k, out List<string> _keys))
+                    {
+                        foreach (string val in _keys)
+                            keys.Add(val);
+                    }
+                }
+
+                updateKeys(_n);
+                updateKeys(_o);
+
+                if ((!AppInit.conf.evercache.enable || AppInit.conf.evercache.validHour > 0) && keys.Count > AppInit.conf.maxreadfile)
+                    keys = keys.Take(AppInit.conf.maxreadfile).ToHashSet();
+
+                foreach (string key in keys)
+                {
+                    foreach (var t in FileDB.OpenRead(key, true).Values)
                     {
                         if (t.types == null || t.title.Contains(" КПК"))
                             continue;
 
-                        string name = StringConvert.SearchName(t.name);
-                        string originalname = StringConvert.SearchName(t.originalname);
+                        string name = t._sn ?? StringConvert.SearchName(t.name);
+                        string originalname = t._so ?? StringConvert.SearchName(t.originalname);
 
                         // Точная выборка по name или originalname
                         if ((_n != null && _n == name) || (_o != null && _o == originalname))
@@ -256,17 +263,38 @@ namespace JacRed.Controllers
                 #region torrentsSearch
                 void torrentsSearch(bool exact)
                 {
-                    var mdb = FileDB.masterDb.Where(i => i.Key.Contains(_s));
-                    if (!AppInit.conf.evercache.enable)
-                        mdb = mdb.Take(AppInit.conf.maxreadfile);
+                    if (_s == null)
+                        return;
 
-                    foreach (var val in mdb)
+                    var keys = new HashSet<string>(20);
+
+                    if (exact)
                     {
-                        foreach (var t in FileDB.OpenRead(val.Key, true).Values)
+                        if (fastdb.TryGetValue(_s, out List<string> _keys))
+                        {
+                            foreach (string val in _keys)
+                                keys.Add(val);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var f in fastdb.Where(i => i.Key.Contains(_s)))
+                        {
+                            foreach (string k in f.Value)
+                                keys.Add(k);
+
+                            if ((!AppInit.conf.evercache.enable || AppInit.conf.evercache.validHour > 0) && keys.Count > AppInit.conf.maxreadfile)
+                                break;
+                        }
+                    }
+
+                    foreach (string key in keys)
+                    {
+                        foreach (var t in FileDB.OpenRead(key, true).Values)
                         {
                             if (exact)
                             {
-                                if (StringConvert.SearchName(t.name) != _s && StringConvert.SearchName(t.originalname) != _s)
+                                if ((t._sn ?? StringConvert.SearchName(t.name)) != _s && (t._so ?? StringConvert.SearchName(t.originalname)) != _s)
                                     continue;
                             }
 
@@ -323,7 +351,7 @@ namespace JacRed.Controllers
             HashSet<int> getCategoryIds(TorrentDetails t, out string categoryDesc)
             {
                 categoryDesc = null;
-                HashSet<int> categoryIds = new HashSet<int>();
+                HashSet<int> categoryIds = new HashSet<int>(t.types.Length);
 
                 foreach (string type in t.types)
                 {
@@ -363,13 +391,13 @@ namespace JacRed.Controllers
             #endregion
 
             #region Объединить дубликаты
-            var tsort = new List<TorrentDetails>();
+            IEnumerable<TorrentDetails> result = null;
 
             if ((!rqnum && AppInit.conf.mergeduplicates) || (rqnum && AppInit.conf.mergenumduplicates))
             {
                 Dictionary<string, (TorrentDetails torrent, string title, string Name, List<string> AnnounceUrls)> temp = new Dictionary<string, (TorrentDetails, string, string, List<string>)>();
 
-                foreach (var torrent in torrents.Values.ToList())
+                foreach (var torrent in torrents.Values)
                 {
                     var magnetLink = MagnetLink.Parse(torrent.magnet);
                     string hex = magnetLink.InfoHash.ToHex();
@@ -490,24 +518,26 @@ namespace JacRed.Controllers
                     }
                 }
 
-                foreach (var item in temp.Select(i => i.Value.torrent))
-                    tsort.Add(item);
+                result = temp.Select(i => i.Value.torrent);
             }
             else
             {
-                tsort = torrents.Values.ToList();
+                result = torrents.Values;
             }
             #endregion
+
+            if (apikey == "rus")
+                result = result.Where(i => (i.languages != null && i.languages.Contains("rus")) || (i.types != null && (i.types.Contains("sport") || i.types.Contains("tvshow") || i.types.Contains("docuserial"))));
 
             #region FFprobe
             List<ffStream> FFprobe(TorrentDetails t, out HashSet<string> langs)
             {
                 langs = t.languages;
-                if (t.ffprobe != null)
+                if (t.ffprobe != null || !AppInit.conf.tracks)
                     return t.ffprobe;
 
                 var streams = TracksDB.Get(t.magnet, t.types);
-                if (streams == null) 
+                if (streams == null)
                     return null;
 
                 langs = TracksDB.Languages(t, streams);
@@ -515,15 +545,14 @@ namespace JacRed.Controllers
             }
             #endregion
 
-            var result = tsort.OrderByDescending(i => i.createTime).Take(2_000);
-            if (apikey == "rus")
-                result = result.Where(i => (i.languages != null && i.languages.Contains("rus")) || (i.types != null && (i.types.Contains("sport") || i.types.Contains("tvshow") || i.types.Contains("docuserial"))));
+            var Results = new List<Result>(torrents.Values.Count);
 
-            HashSet<string> languages = null;
-
-            jval = JsonConvert.SerializeObject(new
+            foreach (var i in result)
             {
-                Results = result.Select(i => new
+                HashSet<string> languages = null;
+                var ffprobe = rqnum ? null : FFprobe(i, out languages);
+
+                Results.Add(new Result() 
                 {
                     Tracker = i.trackerName,
                     Details = i.url != null && i.url.StartsWith("http") ? i.url : null,
@@ -535,29 +564,24 @@ namespace JacRed.Controllers
                     Seeders = i.sid,
                     Peers = i.pir,
                     MagnetUri = i.magnet,
-                    ffprobe = rqnum ? null : FFprobe(i, out languages),
-                    languages = rqnum ? null : languages,
-                    info = rqnum ? null : new 
+                    ffprobe = ffprobe,
+                    languages = languages,
+                    info = rqnum ? null : new TorrentInfo() 
                     {
-                        i.name,
-                        i.originalname,
-                        i.sizeName,
-                        i.relased,
-                        i.videotype,
-                        i.quality,
-                        i.voices,
+                        name = i.name,
+                        originalname = i.originalname,
+                        sizeName = i.sizeName,
+                        relased = i.relased,
+                        videotype = i.videotype,
+                        quality = i.quality,
+                        voices = i.voices,
                         seasons = i.seasons != null && i.seasons.Count > 0 ? i.seasons : null,
-                        i.types
+                        types = i.types
                     }
-                }),
-                jacred = true
+                });
+            }
 
-            }, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-
-            if (setcache && !AppInit.conf.evercache.enable)
-                memoryCache.Set(memoryKey, jval, DateTime.Now.AddMinutes(10));
-
-            return Content(jval, "application/json; charset=utf-8");
+            return Json(new RootObject() { Results = Results });
         }
         #endregion
 
@@ -634,8 +658,8 @@ namespace JacRed.Controllers
 
                         if (string.IsNullOrWhiteSpace(type) || t.types.Contains(type))
                         {
-                            string _n = StringConvert.SearchName(t.name);
-                            string _o = StringConvert.SearchName(t.originalname);
+                            string _n = t._sn ?? StringConvert.SearchName(t.name);
+                            string _o = t._so ?? StringConvert.SearchName(t.originalname);
 
                             if (_n == _s || _o == _s || (_altsearch != null && (_n == _altsearch || _o == _altsearch)))
                                 AddTorrents(t);
@@ -649,7 +673,7 @@ namespace JacRed.Controllers
             {
                 #region Поиск по совпадению ключа в имени
                 var mdb = FileDB.masterDb.Where(i => i.Key.Contains(_s) || (_altsearch != null && i.Key.Contains(_altsearch)));
-                if (!AppInit.conf.evercache.enable)
+                if (!AppInit.conf.evercache.enable || AppInit.conf.evercache.validHour > 0)
                     mdb = mdb.Take(AppInit.conf.maxreadfile);
 
                 foreach (var val in mdb)
@@ -684,7 +708,7 @@ namespace JacRed.Controllers
                 case "size":
                     query = query.OrderByDescending(i => i.size);
                     break;
-                default:
+                case "create":
                     query = query.OrderByDescending(i => i.createTime);
                     break;
             }
@@ -729,6 +753,42 @@ namespace JacRed.Controllers
                 i.seasons,
                 i.types
             }));
+        }
+        #endregion
+
+
+        #region getFastdb
+        Dictionary<string, List<string>> getFastdb()
+        {
+            if (!memoryCache.TryGetValue("api:fastdb", out Dictionary<string, List<string>> fastdb))
+            {
+                fastdb = new Dictionary<string, List<string>>();
+
+                foreach (var item in FileDB.masterDb)
+                {
+                    foreach (string k in item.Key.Split(":"))
+                    {
+                        if (string.IsNullOrEmpty(k))
+                            continue;
+
+                        if (fastdb.TryGetValue(k, out List<string> keys))
+                        {
+                            if (keys == null)
+                                keys = new List<string>();
+
+                            keys.Add(item.Key);
+                        }
+                        else
+                        {
+                            fastdb.Add(k, new List<string>() { item.Key });
+                        }
+                    }
+                }
+
+                memoryCache.Set("api:fastdb", fastdb, DateTime.Now.AddMinutes(10));
+            }
+
+            return fastdb;
         }
         #endregion
     }
