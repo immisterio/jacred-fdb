@@ -35,12 +35,12 @@
   </ItemGroup>
   
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.GC.HeapCount" Value="40" />
-    <RuntimeHostConfigurationOption Include="System.GC.HeapHardLimit" Value="600000000" />
+    <RuntimeHostConfigurationOption Include="System.GC.HeapCount" Value="80" />
+    <!--<RuntimeHostConfigurationOption Include="System.GC.HeapHardLimit" Value="600000000" />-->
   </ItemGroup>
   
-   <PropertyGroup>
+   <!--<PropertyGroup>
     <ServerGarbageCollection>false</ServerGarbageCollection>
-  </PropertyGroup>
+  </PropertyGroup>-->
 
 </Project>

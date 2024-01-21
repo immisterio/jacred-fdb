@@ -8,7 +8,6 @@ using JacRed.Models.Details;
 using JacRed.Models.Sync.v2;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
 
 namespace JacRed.Controllers
 {
@@ -31,14 +30,14 @@ namespace JacRed.Controllers
             if (!AppInit.conf.opensync)
                 return Content("[]", "application/json; charset=utf-8");
 
-            return Content(JsonConvert.SerializeObject(FileDB.masterDb.Where(i => i.Key.Contains(key)).Take(20).Select(i => new
+            return Json(FileDB.masterDb.Where(i => i.Key.Contains(key)).Take(20).Select(i => new
             {
                 i.Key,
                 i.Value.updateTime,
                 i.Value.fileTime,
                 path = $"Data/fdb/{HashTo.md5(i.Key).Substring(0, 2)}/{HashTo.md5(i.Key).Substring(2)}",
                 value = FileDB.OpenRead(i.Key)
-            })), "application/json; charset=utf-8");
+            }));
         }
 
         [Route("/sync/fdb/torrents")]

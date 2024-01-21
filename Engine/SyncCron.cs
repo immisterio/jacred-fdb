@@ -72,7 +72,7 @@ namespace JacRed.Engine
                                     }
                                 }
 
-                                FileDB.AddOrUpdate(torrents);
+                                FileDB.AddOrUpdate(torrents, cache: false);
 
                                 lastsync = root.collections.Last().Value.fileTime;
 
@@ -104,7 +104,7 @@ namespace JacRed.Engine
                             next: var root = await HttpClient.Get<RootObject>($"{AppInit.conf.syncapi}/sync/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
                             if (root?.torrents != null && root.torrents.Count > 0)
                             {
-                                FileDB.AddOrUpdate(root.torrents.Select(i => i.value).ToList());
+                                FileDB.AddOrUpdate(root.torrents.Select(i => i.value).ToList(), cache: false);
 
                                 lastsync = root.torrents.Last().value.updateTime.ToFileTimeUtc();
 
@@ -172,7 +172,7 @@ namespace JacRed.Engine
                             if (root?.collections != null && root.collections.Count > 0)
                             {
                                 foreach (var collection in root.collections)
-                                    FileDB.AddOrUpdate(collection.Value.torrents.Values);
+                                    FileDB.AddOrUpdate(collection.Value.torrents.Values, cache: false);
 
                                 lastsync_spidr = root.collections.Last().Value.fileTime;
 

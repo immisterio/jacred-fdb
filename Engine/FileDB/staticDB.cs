@@ -141,7 +141,7 @@ namespace JacRed.Engine
             return fdb.Database;
         }
 
-        public static FileDB OpenWrite(string key)
+        public static FileDB OpenWrite(string key, bool cache = true)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
             {
@@ -151,19 +151,22 @@ namespace JacRed.Engine
             else
             {
                 var fdb = new FileDB(key);
-                openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
+
+                if (cache)
+                    openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
+
                 return fdb;
             }
         }
         #endregion
 
         #region AddOrUpdate
-        public static void AddOrUpdate(IReadOnlyCollection<TorrentBaseDetails> torrents)
+        public static void AddOrUpdate(IReadOnlyCollection<TorrentBaseDetails> torrents, bool cache = true)
         {
-            _ = AddOrUpdate(torrents, null);
+            _ = AddOrUpdate(torrents, null, cache);
         }
 
-        async public static ValueTask AddOrUpdate<T>(IReadOnlyCollection<T> torrents, Func<T, IReadOnlyDictionary<string, TorrentDetails>, Task<bool>> predicate) where T : TorrentBaseDetails
+        async public static ValueTask AddOrUpdate<T>(IReadOnlyCollection<T> torrents, Func<T, IReadOnlyDictionary<string, TorrentDetails>, Task<bool>> predicate, bool cache = true) where T : TorrentBaseDetails
         {
             var temp = new Dictionary<string, List<T>>();
 
@@ -178,7 +181,7 @@ namespace JacRed.Engine
 
             foreach (var t in temp)
             {
-                using (var fdb = OpenWrite(t.Key))
+                using (var fdb = OpenWrite(t.Key, cache))
                 {
                     foreach (var torrent in t.Value)
                     {
@@ -248,7 +251,7 @@ namespace JacRed.Engine
                 {
                     if (openWriteTask.Count > AppInit.conf.evercache.maxOpenWriteTask)
                     {
-                        foreach (var i in openWriteTask.OrderBy(i => i.Value.countread).Take(100))
+                        foreach (var i in openWriteTask.OrderBy(i => i.Value.countread).Take(AppInit.conf.evercache.dropCacheTake))
                             openWriteTask.TryRemove(i.Key, out _);
                     }
                 }

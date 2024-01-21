@@ -78,7 +78,7 @@ namespace JacRed
 
         public int maxreadfile = 200;
 
-        public Evercache evercache = new Evercache() { enable = true, validHour = 1, maxOpenWriteTask = 2000 };
+        public Evercache evercache = new Evercache() { enable = true, validHour = 1, maxOpenWriteTask = 2000, dropCacheTake = 200 };
 
         public int fdbPathLevels = 2;
 
