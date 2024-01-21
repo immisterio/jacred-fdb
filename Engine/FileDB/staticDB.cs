@@ -111,7 +111,7 @@ namespace JacRed.Engine
         #endregion
 
         #region OpenRead / OpenWrite
-        public static IReadOnlyDictionary<string, TorrentDetails> OpenRead(string key, bool update_lastread = false)
+        public static IReadOnlyDictionary<string, TorrentDetails> OpenRead(string key, bool update_lastread = false, bool cache = true)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
             {
@@ -126,7 +126,7 @@ namespace JacRed.Engine
 
             var fdb = new FileDB(key);
 
-            if (AppInit.conf.evercache.enable)
+            if (cache && AppInit.conf.evercache.enable)
             {
                 var wtm = new WriteTaskModel() { db = fdb, openconnection = 1 };
                 if (update_lastread)
@@ -141,7 +141,7 @@ namespace JacRed.Engine
             return fdb.Database;
         }
 
-        public static FileDB OpenWrite(string key, bool cache = true)
+        public static FileDB OpenWrite(string key)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
             {
@@ -151,22 +151,19 @@ namespace JacRed.Engine
             else
             {
                 var fdb = new FileDB(key);
-
-                if (cache)
-                    openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
-
+                openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
                 return fdb;
             }
         }
         #endregion
 
         #region AddOrUpdate
-        public static void AddOrUpdate(IReadOnlyCollection<TorrentBaseDetails> torrents, bool cache = true)
+        public static void AddOrUpdate(IReadOnlyCollection<TorrentBaseDetails> torrents)
         {
-            _ = AddOrUpdate(torrents, null, cache);
+            _ = AddOrUpdate(torrents, null);
         }
 
-        async public static ValueTask AddOrUpdate<T>(IReadOnlyCollection<T> torrents, Func<T, IReadOnlyDictionary<string, TorrentDetails>, Task<bool>> predicate, bool cache = true) where T : TorrentBaseDetails
+        async public static ValueTask AddOrUpdate<T>(IReadOnlyCollection<T> torrents, Func<T, IReadOnlyDictionary<string, TorrentDetails>, Task<bool>> predicate) where T : TorrentBaseDetails
         {
             var temp = new Dictionary<string, List<T>>();
 
@@ -181,7 +178,7 @@ namespace JacRed.Engine
 
             foreach (var t in temp)
             {
-                using (var fdb = OpenWrite(t.Key, cache))
+                using (var fdb = OpenWrite(t.Key))
                 {
                     foreach (var torrent in t.Value)
                     {

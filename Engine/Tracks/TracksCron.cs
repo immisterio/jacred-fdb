@@ -34,7 +34,7 @@ namespace JacRed.Engine
 
                     foreach (var item in FileDB.masterDb.ToArray())
                     {
-                        foreach (var t in FileDB.OpenRead(item.Key).Values)
+                        foreach (var t in FileDB.OpenRead(item.Key, cache: false).Values)
                         {
                             if (string.IsNullOrEmpty(t.magnet))
                                 continue;

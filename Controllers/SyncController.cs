@@ -36,7 +36,7 @@ namespace JacRed.Controllers
                 i.Value.updateTime,
                 i.Value.fileTime,
                 path = $"Data/fdb/{HashTo.md5(i.Key).Substring(0, 2)}/{HashTo.md5(i.Key).Substring(2)}",
-                value = FileDB.OpenRead(i.Key)
+                value = FileDB.OpenRead(i.Key, cache: false)
             }));
         }
 
@@ -60,7 +60,7 @@ namespace JacRed.Controllers
             {
                 var torrent = new Dictionary<string, TorrentDetails>();
 
-                foreach (var t in FileDB.OpenRead(item.Key))
+                foreach (var t in FileDB.OpenRead(item.Key, cache: false))
                 {
                     if (spidr || (start != -1 && start > t.Value.updateTime.ToFileTimeUtc()))
                     {
@@ -136,7 +136,7 @@ namespace JacRed.Controllers
 
             foreach (var item in masterDb.Where(i => i.Value.fileTime > time))
             {
-                foreach (var torrent in FileDB.OpenRead(item.Key))
+                foreach (var torrent in FileDB.OpenRead(item.Key, cache: false))
                 {
                     var _t = (TorrentDetails)torrent.Value.Clone();
 
