@@ -24,11 +24,6 @@ Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka 
 * fdbPathLevels - для релиза 25.01.2023 установить в 1
 * timeStatsUpdate - интервал обновления статистики в минутах 
 
-При включении evercache c validHour=0, нужно убрать в JacRed.runtimeconfig.json лимит потребления памяти 
-```
-"System.GC.HeapCount": 40,
-"System.GC.HeapHardLimit": 600000000, // ~600mb
-```
 
 # Настройка init.conf
 * Список всех параметров, а так же значения по умолчанию смотреть в example.conf 
