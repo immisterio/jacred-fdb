@@ -248,7 +248,10 @@ namespace JacRed.Engine
                 {
                     if (openWriteTask.Count > AppInit.conf.evercache.maxOpenWriteTask)
                     {
-                        foreach (var i in openWriteTask.OrderBy(i => i.Value.countread).Take(AppInit.conf.evercache.dropCacheTake))
+                        var query = openWriteTask.Where(i => DateTime.Now > i.Value.create.AddMinutes(10));
+                        query = query.OrderBy(i => i.Value.countread).ThenBy(i => i.Value.lastread);
+
+                        foreach (var i in query.Take(AppInit.conf.evercache.dropCacheTake))
                             openWriteTask.TryRemove(i.Key, out _);
                     }
                 }

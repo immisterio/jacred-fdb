@@ -9,6 +9,8 @@ namespace JacRed.Models
 
         public DateTime lastread { get; set; }
 
+        public DateTime create { get; set; } = DateTime.Now;
+
         public int countread { get; set; }
 
         public int openconnection { get; set; }

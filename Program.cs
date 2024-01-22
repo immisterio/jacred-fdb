@@ -5,6 +5,9 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 using JacRed.Engine;
+using System.Threading.Tasks;
+using System;
+using JacRed.Controllers;
 
 namespace JacRed
 {
@@ -12,6 +15,12 @@ namespace JacRed
     {
         public static void Main(string[] args)
         {
+            ThreadPool.QueueUserWorkItem(async _ => 
+            {
+                await Task.Delay(TimeSpan.FromMinutes(10));
+                ApiController.getFastdb(update: true);
+            });
+
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Torrents());
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Spidr());
 

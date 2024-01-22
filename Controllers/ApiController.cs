@@ -37,29 +37,43 @@ namespace JacRed.Controllers
         [Route("/api/v2.0/indexers/{status}/results")]
         public ActionResult Jackett(string apikey, string query, string title, string title_original, int year, Dictionary<string, string> category, int is_serial = -1)
         {
-            bool rqnum = false;
             var fastdb = getFastdb();
             var torrents = new Dictionary<string, TorrentDetails>();
+            bool rqnum = !HttpContext.Request.QueryString.Value.Contains("&is_serial=") && HttpContext.Request.Headers.UserAgent.ToString() == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
 
             #region Запрос с NUM
-            var mNum = Regex.Match(query ?? string.Empty, "^([^a-z-A-Z]+) ([^а-я-А-Я]+) ([0-9]{4})$");
-
-            if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(title_original) &&
-                mNum.Success)
+            if (rqnum && query != null)
             {
-                if (Regex.IsMatch(mNum.Groups[2].Value, "[a-zA-Z0-9]{2}"))
-                {
-                    rqnum = true;
-                    var g = mNum.Groups;
+                var mNum = Regex.Match(query, "^([^a-z-A-Z]+) ([^а-я-А-Я]+) ([0-9]{4})$");
 
-                    title = g[1].Value;
-                    title_original = g[2].Value;
-                    year = int.Parse(g[3].Value);
+                if (mNum.Success)
+                {
+                    if (Regex.IsMatch(mNum.Groups[2].Value, "[a-zA-Z0-9]{2}"))
+                    {
+                        var g = mNum.Groups;
+                        title = g[1].Value;
+                        title_original = g[2].Value;
+                        year = int.Parse(g[3].Value);
+                    }
+                }
+                else
+                {
+                    if (Regex.IsMatch(query, "^([^a-z-A-Z]+) ((19|20)[0-9]{2})$"))
+                        return Json(new RootObject() { Results = new List<Result>() });
+
+                    mNum = Regex.Match(query, "^([^a-z-A-Z]+) ([^а-я-А-Я]+)$");
+
+                    if (mNum.Success)
+                    {
+                        if (Regex.IsMatch(mNum.Groups[2].Value, "[a-zA-Z0-9]{2}"))
+                        {
+                            var g = mNum.Groups;
+                            title = g[1].Value;
+                            title_original = g[2].Value;
+                        }
+                    }
                 }
             }
-
-            if (!rqnum)
-                rqnum = !HttpContext.Request.QueryString.Value.Contains("&is_serial=") && HttpContext.Request.Headers.UserAgent.ToString() == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
             #endregion
 
             #region category
@@ -261,14 +275,14 @@ namespace JacRed.Controllers
                 string _s = StringConvert.SearchName(query);
 
                 #region torrentsSearch
-                void torrentsSearch(bool exact)
+                void torrentsSearch(bool exact, bool exactdb)
                 {
                     if (_s == null)
                         return;
 
                     HashSet<string> keys = null;
 
-                    if (exact)
+                    if (exactdb)
                     {
                         if (fastdb.TryGetValue(_s, out List<string> _keys) && _keys.Count > 0)
                         {
@@ -294,8 +308,7 @@ namespace JacRed.Controllers
                                     break;
                             }
 
-                            if (keys.Count > 0)
-                                memoryCache.Set(mkey, keys, DateTime.Now.AddHours(1));
+                            memoryCache.Set(mkey, keys, DateTime.Now.AddHours(1));
                         }
                     }
 
@@ -351,12 +364,16 @@ namespace JacRed.Controllers
                 #endregion
 
                 if (is_serial == -1)
-                    torrentsSearch(exact: false);
+                {
+                    torrentsSearch(exact: false, exactdb: true);
+                    if (torrents.Count == 0)
+                        torrentsSearch(exact: false, exactdb: false);
+                }
                 else
                 {
-                    torrentsSearch(exact: true);
+                    torrentsSearch(exact: true, exactdb: true);
                     if (torrents.Count == 0)
-                        torrentsSearch(exact: false);
+                        torrentsSearch(exact: false, exactdb: false);
                 }
                 #endregion
             }
@@ -772,11 +789,13 @@ namespace JacRed.Controllers
 
 
         #region getFastdb
-        Dictionary<string, List<string>> getFastdb()
+        static Dictionary<string, List<string>> _fastdb = null;
+
+        public static Dictionary<string, List<string>> getFastdb(bool update = false)
         {
-            if (!memoryCache.TryGetValue("api:fastdb", out Dictionary<string, List<string>> fastdb))
+            if (_fastdb == null || update)
             {
-                fastdb = new Dictionary<string, List<string>>();
+                var fastdb = new Dictionary<string, List<string>>();
 
                 foreach (var item in FileDB.masterDb)
                 {
@@ -787,9 +806,6 @@ namespace JacRed.Controllers
 
                         if (fastdb.TryGetValue(k, out List<string> keys))
                         {
-                            if (keys == null)
-                                keys = new List<string>();
-
                             keys.Add(item.Key);
                         }
                         else
@@ -799,10 +815,10 @@ namespace JacRed.Controllers
                     }
                 }
 
-                memoryCache.Set("api:fastdb", fastdb, DateTime.Now.AddMinutes(10));
+                _fastdb = fastdb;
             }
 
-            return fastdb;
+            return _fastdb;
         }
         #endregion
     }
