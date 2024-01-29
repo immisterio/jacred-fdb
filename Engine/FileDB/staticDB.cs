@@ -126,7 +126,7 @@ namespace JacRed.Engine
 
             var fdb = new FileDB(key);
 
-            if (cache && AppInit.conf.evercache.enable)
+            if (AppInit.conf.evercache.enable && (cache || AppInit.conf.evercache.validHour == 0))
             {
                 var wtm = new WriteTaskModel() { db = fdb, openconnection = 1 };
                 if (update_lastread)

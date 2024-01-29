@@ -17,8 +17,11 @@ namespace JacRed
         {
             ThreadPool.QueueUserWorkItem(async _ => 
             {
-                await Task.Delay(TimeSpan.FromMinutes(10));
-                ApiController.getFastdb(update: true);
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(10));
+                    try { ApiController.getFastdb(update: true); } catch { }
+                }
             });
 
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Torrents());

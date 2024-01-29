@@ -37,6 +37,8 @@ namespace JacRed.Controllers
         [Route("/api/v2.0/indexers/{status}/results")]
         public ActionResult Jackett(string apikey, string query, string title, string title_original, int year, Dictionary<string, string> category, int is_serial = -1)
         {
+            //Console.WriteLine(HttpContext.Request.Path + HttpContext.Request.QueryString.Value);
+
             var fastdb = getFastdb();
             var torrents = new Dictionary<string, TorrentDetails>();
             bool rqnum = !HttpContext.Request.QueryString.Value.Contains("&is_serial=") && HttpContext.Request.Headers.UserAgent.ToString() == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
