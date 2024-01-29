@@ -566,14 +566,18 @@ namespace JacRed.Controllers
             List<ffStream> FFprobe(TorrentDetails t, out HashSet<string> langs)
             {
                 langs = t.languages;
+
                 if (t.ffprobe != null || !AppInit.conf.tracks)
+                {
+                    langs = TracksDB.Languages(t, t.ffprobe);
                     return t.ffprobe;
+                }
 
                 var streams = TracksDB.Get(t.magnet, t.types);
+                langs = TracksDB.Languages(t, streams ?? t.ffprobe);
                 if (streams == null)
                     return null;
 
-                langs = TracksDB.Languages(t, streams);
                 return streams;
             }
             #endregion
