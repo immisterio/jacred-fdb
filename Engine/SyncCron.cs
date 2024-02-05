@@ -1,6 +1,5 @@
 ﻿using JacRed.Engine.CORE;
 using JacRed.Models.Details;
-using JacRed.Models.Sync;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -101,7 +100,7 @@ namespace JacRed.Engine
                         else
                         {
                             #region Sync.v1
-                            next: var root = await HttpClient.Get<RootObject>($"{AppInit.conf.syncapi}/sync/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
+                            next: var root = await HttpClient.Get<Models.Sync.v1.RootObject>($"{AppInit.conf.syncapi}/sync/torrents?time={lastsync}", timeoutSeconds: 300, MaxResponseContentBufferSize: 100_000_000);
                             if (root?.torrents != null && root.torrents.Count > 0)
                             {
                                 FileDB.AddOrUpdate(root.torrents.Select(i => i.value).ToList());

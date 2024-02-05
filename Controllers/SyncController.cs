@@ -126,7 +126,7 @@ namespace JacRed.Controllers
                 return Json(new List<string>());
 
             int take = 2_000;
-            var torrents = new Dictionary<string, TorrentDetails>();
+            var torrents = new List<Models.Sync.v1.Torrent>(take+1);
 
             if (!memoryCache.TryGetValue("sync:masterDb", out Dictionary<string, TorrentInfo> masterDb))
             {
@@ -139,6 +139,7 @@ namespace JacRed.Controllers
                 foreach (var torrent in FileDB.OpenRead(item.Key, cache: false))
                 {
                     var _t = (TorrentDetails)torrent.Value.Clone();
+                    _t.updateTime = item.Value.updateTime;
 
                     var streams = TracksDB.Get(_t.magnet, _t.types);
                     if (streams != null)
@@ -147,15 +148,7 @@ namespace JacRed.Controllers
                         _t.languages = TracksDB.Languages(_t, streams);
                     }
 
-                    if (torrents.TryGetValue(torrent.Key, out TorrentDetails val))
-                    {
-                        if (torrent.Value.updateTime > val.updateTime)
-                            torrents[torrent.Key] = _t;
-                    }
-                    else
-                    {
-                        torrents.TryAdd(torrent.Key, _t);
-                    }
+                    torrents.Add(new Models.Sync.v1.Torrent() { key = torrent.Key, value = _t });
                 }
 
                 if (torrents.Count > take)
@@ -165,7 +158,7 @@ namespace JacRed.Controllers
                 }
             }
 
-            return Json(new { take, torrents = torrents.OrderBy(i => i.Value.updateTime) });
+            return Json(new { take, torrents });
         }
     }
 }
