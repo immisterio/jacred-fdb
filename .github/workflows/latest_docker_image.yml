@@ -1,4 +1,4 @@
-name: MultiArchDockerBuild
+name: MultiArchDockerLatest
 
 on:
   push:
