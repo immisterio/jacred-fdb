@@ -74,7 +74,7 @@ namespace JacRed
 
         public bool syncsport = true;
 
-        public bool syncspidr = false;
+        public bool syncspidr = true;
 
         public int maxreadfile = 200;
 

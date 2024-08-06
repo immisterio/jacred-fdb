@@ -25,6 +25,18 @@ namespace JacRed.Controllers
             return File(System.IO.File.OpenRead("wwwroot/index.html"), "text/html");
         }
 
+        [Route("/version")]
+        public ActionResult Version() => Content("11", contentType: "text/plain; charset=utf-8");
+
+        [Route("health")]
+        public IActionResult Health()
+        {
+            return Json(new JObject
+            {
+                ["status"] = "OK"
+            });
+        }
+
         [Route("api/v1.0/conf")]
         public JsonResult JacRedConf(string apikey)
         {
