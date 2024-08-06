@@ -18,6 +18,11 @@ wget https://github.com/immisterio/jacred-fdb/releases/latest/download/publish.z
 unzip -o publish.zip
 rm -f publish.zip
 
+# Download database
+wget http://redb.cfhttp.top/latest.zip
+unzip -o latest.zip
+rm -f latest.zip
+
 # Create service
 echo ""
 echo "Install service to /etc/systemd/system/jacred.service ..."

@@ -72,6 +72,8 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
+        public string[] disable_trackers = new string[] { "hdrezka" };
+
         public bool syncsport = true;
 
         public bool syncspidr = true;

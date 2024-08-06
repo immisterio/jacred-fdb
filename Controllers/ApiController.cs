@@ -25,9 +25,6 @@ namespace JacRed.Controllers
             return File(System.IO.File.OpenRead("wwwroot/index.html"), "text/html");
         }
 
-        [Route("/version")]
-        public ActionResult Version() => Content("11", contentType: "text/plain; charset=utf-8");
-
         [Route("health")]
         public IActionResult Health()
         {
@@ -35,6 +32,21 @@ namespace JacRed.Controllers
             {
                 ["status"] = "OK"
             });
+        }
+
+        [Route("version")]
+        public ActionResult Version() 
+        {
+            return Content("11", contentType: "text/plain; charset=utf-8");
+        }
+
+        [Route("lastupdatedb")]
+        public ActionResult LastUpdateDB() 
+        {
+            if (FileDB.masterDb == null || FileDB.masterDb.Count == 0)
+                return Content("01.01.2000 01:01", contentType: "text/plain; charset=utf-8");
+
+            return Content(FileDB.masterDb.OrderByDescending(i => i.Value.updateTime).First().Value.updateTime.ToString("dd.MM.yyyy HH:mm"), contentType: "text/plain; charset=utf-8");
         }
 
         [Route("api/v1.0/conf")]
@@ -118,6 +130,9 @@ namespace JacRed.Controllers
             void AddTorrents(TorrentDetails t)
             {
                 if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(t.trackerName))
+                    return;
+
+                if (AppInit.conf.disable_trackers != null && AppInit.conf.disable_trackers.Contains(t.trackerName))
                     return;
 
                 if (torrents.TryGetValue(t.url, out TorrentDetails val))
@@ -676,6 +691,9 @@ namespace JacRed.Controllers
             void AddTorrents(TorrentDetails t)
             {
                 if (AppInit.conf.synctrackers != null && !AppInit.conf.synctrackers.Contains(t.trackerName))
+                    return;
+
+                if (AppInit.conf.disable_trackers != null && AppInit.conf.disable_trackers.Contains(t.trackerName))
                     return;
 
                 if (torrents.TryGetValue(t.url, out TorrentDetails val))
