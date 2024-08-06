@@ -1,7 +1,7 @@
 # Установка
 curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
 
-* ПО УМОЛЧАНИЯ НАСТРОЕНА СИНХРОНИЗАЦИЯ С ВНЕШНЕГО СЕРВЕРА
+* ПО УМОЛЧАНИЯ НАСТРОЕНА СИНХРОНИЗАЦИЯ БАЗЫ С ВНЕШНЕГО СЕРВЕРА
 
 # Источники 
 Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Baibako, LostFilm, Anilibria, Animelayer, Anifilm
