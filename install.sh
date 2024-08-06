@@ -20,7 +20,7 @@ rm -f publish.zip
 
 # Download database
 wget http://redb.cfhttp.top/latest.zip
-unzip -o latest.zip
+unzip -oq latest.zip
 rm -f latest.zip
 
 # Create service
