@@ -25,7 +25,7 @@ Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka 
 * timeStatsUpdate - интервал обновления статистики в минутах 
 
 
-# Настройка init.conf
+# Пример init.conf
 * Список всех параметров, а так же значения по умолчанию смотреть в example.conf 
 * В init.conf нужно указывать только те параметры, которые хотите изменить
 
