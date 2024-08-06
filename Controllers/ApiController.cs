@@ -28,7 +28,7 @@ namespace JacRed.Controllers
         [Route("health")]
         public IActionResult Health()
         {
-            return Json(new JObject
+            return Json(new Dictionary<string, string>
             {
                 ["status"] = "OK"
             });
