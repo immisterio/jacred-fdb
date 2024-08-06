@@ -1,12 +1,14 @@
 # Установка
 curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
 
-# Настройка парсера
-1. Настроить init.conf (пример настроек в example.conf)
-2. Перенести в crontab "Data/crontab" или указать сервер "syncapi" в init.conf 
+* ПО УМОЛЧАНИЯ НАСТРОЕНА СИНХРОНИЗАЦИЯ С ВНЕШНЕГО СЕРВЕРА
 
 # Источники 
-Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Rezka, Baibako, LostFilm, Anilibria, Animelayer, Anifilm
+Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Baibako, LostFilm, Anilibria, Animelayer, Anifilm
+
+# Самостоятельный парсинг источников
+1. Настроить init.conf (пример настроек в example.conf)
+2. Перенести в crontab "Data/crontab" или указать сервер "syncapi" в init.conf 
 
 # Доступ к доменам .onion
 1. Запустить tor на порту 9050
