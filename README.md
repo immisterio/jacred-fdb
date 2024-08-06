@@ -21,7 +21,6 @@ Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka 
 * timeSync - интервал синхронизации с базой syncapi 
 * maxreadfile - максимальное количество открытых файлов за один поисковый запрос 
 * evercache - хранить открытые файлы в кеше (рекомендуется для общего доступа с высокой нагрузкой)
-* fdbPathLevels - для релиза 25.01.2023 установить в 1
 * timeStatsUpdate - интервал обновления статистики в минутах 
 
 
