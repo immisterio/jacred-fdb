@@ -35,6 +35,7 @@ namespace JacRed
         }
         #endregion
 
+        public string torrentsStatFile = "Data/temp/stats.json";
 
         public string listenip = "any";
 

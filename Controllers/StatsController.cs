@@ -16,7 +16,10 @@ namespace JacRed.Controllers
 
             if (string.IsNullOrWhiteSpace(trackerName))
             {
-                return Content(System.IO.File.ReadAllText("Data/temp/stats.json"));
+                if (System.IO.File.Exists(AppInit.conf.torrentsStatFile))
+                    return Content(System.IO.File.ReadAllText(AppInit.conf.torrentsStatFile));
+                else
+                    return Content(string.Empty);
             }
             else
             {
