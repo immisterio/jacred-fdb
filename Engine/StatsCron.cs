@@ -71,6 +71,7 @@ namespace JacRed.Engine
                         }
                     }
 
+                    Directory.CreateDirectory(Path.GetDirectoryName(AppInit.conf.torrentsStatFile)); // Creates all directories and subdirectories in the specified path unless they already exist.
                     File.WriteAllText(AppInit.conf.torrentsStatFile, JsonConvert.SerializeObject(stats.OrderByDescending(i => i.Value.alltorrents).Select(i => new
                     {
                         trackerName = i.Key,
