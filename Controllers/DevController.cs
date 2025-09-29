@@ -13,9 +13,6 @@ namespace JacRed.Controllers
     {
         public JsonResult UpdateSize()
         {
-            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
-                return Json(new { badip = true });
-
             #region getSizeInfo
             long getSizeInfo(string sizeName)
             {
@@ -67,9 +64,6 @@ namespace JacRed.Controllers
 
         public JsonResult ResetCheckTime()
         {
-            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
-                return Json(new { badip = true });
-
             foreach (var item in FileDB.masterDb.ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
@@ -89,9 +83,6 @@ namespace JacRed.Controllers
 
         public JsonResult UpdateDetails()
         {
-            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
-                return Json(new { badip = true });
-
             foreach (var item in FileDB.masterDb.ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
@@ -115,9 +106,6 @@ namespace JacRed.Controllers
 
         public JsonResult UpdateSearchName()
         {
-            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
-                return Json(new { badip = true });
-
             foreach (var item in FileDB.masterDb.ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
