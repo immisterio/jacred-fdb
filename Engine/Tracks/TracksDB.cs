@@ -20,7 +20,6 @@ namespace JacRed.Engine
         public static void Configuration()
         {
             Console.WriteLine("TracksDB load");
-            Directory.CreateDirectory("Data/tracks");
 
             foreach (var folder1 in Directory.GetDirectories("Data/tracks"))
             {
