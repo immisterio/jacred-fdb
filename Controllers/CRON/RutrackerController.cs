@@ -358,7 +358,7 @@ namespace JacRed.Controllers.CRON
                         name = name.Replace("в 3Д", "").Trim();
 
                     if (originalname != null)
-                        originalname = originalname.Replace(" 3D", "").Trim();
+                        originalname = originalname.Replace(" in 3D", "").Replace(" 3D", "").Trim();
                 }
                 else if (cat is "842" or "235" or "242" or "819" or "1531" or "721" or "1102" or "1120" or "1214" or "489" or "387" or "9" or "81" or "119" or "1803" or "266" or "193" or "1690" or "1459" or "825" or "1248" or "1288"
                                       or "325" or "534" or "694" or "704" or "921" or "815" or "1460")
