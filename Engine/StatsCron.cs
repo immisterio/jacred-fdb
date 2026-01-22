@@ -71,7 +71,7 @@ namespace JacRed.Engine
                         }
                     }
 
-                    File.WriteAllText("Data/temp/stats.json", JsonConvert.SerializeObject(stats.OrderByDescending(i => i.Value.alltorrents).Select(i => new
+                    File.WriteAllText(AppInit.conf.torrentsStatFile, JsonConvert.SerializeObject(stats.OrderByDescending(i => i.Value.alltorrents).Select(i => new
                     {
                         trackerName = i.Key,
                         lastnewtor = i.Value.lastnewtor.ToString("dd.MM.yyyy"),

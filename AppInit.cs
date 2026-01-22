@@ -55,6 +55,7 @@ namespace JacRed
         public static AppInit conf => cacheconf.Item1;
         #endregion
 
+        public string torrentsStatFile = "Data/temp/stats.json";
 
         public string listenip = "any";
 
